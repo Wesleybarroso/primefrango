@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { boolean, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -22,7 +22,31 @@ export const users = mysqlTable("users", {
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
 });
 
+export const integrationProvider = mysqlEnum("integration_provider", [
+  "stripe",
+  "mercado_pago",
+  "google_maps",
+  "whatsapp",
+  "email",
+  "assistant_ia",
+]);
+
+export const integrationSettings = mysqlTable("integration_settings", {
+  id: int("id").autoincrement().primaryKey(),
+  provider: integrationProvider.notNull().unique(),
+  label: varchar("label", { length: 80 }).notNull(),
+  maskedSecret: varchar("maskedSecret", { length: 32 }).notNull(),
+  secretCiphertext: text("secretCiphertext").notNull(),
+  webhookUrl: varchar("webhookUrl", { length: 2048 }),
+  webhookCiphertext: text("webhookCiphertext"),
+  isEnabled: boolean("isEnabled").notNull().default(false),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
+export type IntegrationProvider = "stripe" | "mercado_pago" | "google_maps" | "whatsapp" | "email" | "assistant_ia";
+export type IntegrationSetting = typeof integrationSettings.$inferSelect;
 
 // TODO: Add your tables here

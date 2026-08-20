@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, IntegrationProvider, integrationSettings, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -87,6 +87,34 @@ export async function getUserByOpenId(openId: string) {
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
 
   return result.length > 0 ? result[0] : undefined;
+}
+
+export async function listIntegrationSettings() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select({ provider: integrationSettings.provider, label: integrationSettings.label, maskedSecret: integrationSettings.maskedSecret, isEnabled: integrationSettings.isEnabled, updatedAt: integrationSettings.updatedAt }).from(integrationSettings);
+}
+
+export async function saveIntegrationSetting(input: {
+  provider: IntegrationProvider;
+  label: string;
+  maskedSecret: string;
+  secretCiphertext: string;
+  webhookUrl?: string;
+  webhookCiphertext?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Banco de dados indisponível para salvar a integração.");
+  await db.insert(integrationSettings).values({ ...input, isEnabled: true }).onDuplicateKeyUpdate({
+    set: {
+      label: input.label,
+      maskedSecret: input.maskedSecret,
+      secretCiphertext: input.secretCiphertext,
+      webhookUrl: input.webhookUrl ?? null,
+      webhookCiphertext: input.webhookCiphertext ?? null,
+      isEnabled: true,
+    },
+  });
 }
 
 // TODO: add feature queries here as your schema grows.

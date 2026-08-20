@@ -1,6 +1,4 @@
-- [x] Auditar navegação, rotas, ações e coerência entre páginas públicas, cliente e painel administrativo.
-- [x] Implementar navegação funcional, menu mobile, aviso de cookies e preferências persistentes, com teste de rotas e armazenamento local.
-- [x] Implementar SEO técnico: metadados, canonical, robots, sitemap, Open Graph e dados estruturados locais.
-- [x] Ajustar layouts para telas mobile e validar todas as páginas principais.
-- [x] Atualizar PDFs com as melhorias, as evidências mobile e a arquitetura final.
-- [x] Salvar checkpoint e entregar projeto, PDFs e capturas profissionais.
+- [x] Definir os campos de credenciais e a regra de mascaramento no painel de Integrações.
+- [x] Implementar formulários administrativos para Mercado Pago, Stripe, mapas, WhatsApp, e-mail e IA.
+- [x] Encaminhar segredos para armazenamento protegido no servidor, sem exibição posterior da chave completa.
+- [x] Validar os formulários, documentar a ativação e preparar os arquivos para GitHub.
