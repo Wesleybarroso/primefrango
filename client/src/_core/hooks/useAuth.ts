@@ -1,7 +1,7 @@
 import { startLogin } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { TRPCClientError } from "@trpc/client";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 type UseAuthOptions = {
   redirectOnUnauthenticated?: boolean;
@@ -14,7 +14,12 @@ export function useAuth(options?: UseAuthOptions) {
   // the state cookie, so calling it per render would overwrite the cookie and
   // desync it from an in-flight login's `state`.
   const { redirectOnUnauthenticated = false, redirectPath } = options ?? {};
+  const [hydrated, setHydrated] = useState(false);
   const utils = trpc.useUtils();
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   const meQuery = trpc.auth.me.useQuery(undefined, {
     enabled: typeof window !== "undefined",
@@ -54,7 +59,7 @@ export function useAuth(options?: UseAuthOptions) {
   const state = useMemo(() => {
     if (typeof window !== "undefined") {
       try {
-        localStorage.setItem(
+        window.localStorage.setItem(
           "manus-runtime-user-info",
           JSON.stringify(meQuery.data)
         );
@@ -62,7 +67,10 @@ export function useAuth(options?: UseAuthOptions) {
     }
     return {
       user: meQuery.data ?? null,
-      loading: meQuery.isLoading || logoutMutation.isPending,
+      // A consulta de sessão só é ativada no navegador. Mantemos o estado de
+      // carregamento até a montagem para o HTML inicial ser igual no SSR e na
+      // primeira renderização do cliente.
+      loading: !hydrated || meQuery.isLoading || logoutMutation.isPending,
       error: meQuery.error ?? logoutMutation.error ?? null,
       isAuthenticated: Boolean(meQuery.data),
     };
@@ -72,6 +80,7 @@ export function useAuth(options?: UseAuthOptions) {
     meQuery.isLoading,
     logoutMutation.error,
     logoutMutation.isPending,
+    hydrated,
   ]);
 
   useEffect(() => {

@@ -28,11 +28,18 @@ import {
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "./_core/hooks/useAuth";
+import { startLogin } from "./const";
 import { readCookiePreference, saveCookiePreference, type CookiePreference } from "./cookiePreferences";
 import { trpc } from "./lib/trpc";
-import { adminViewFromPath, publicRoutes, publicViewFromPath, type AdminView, type PublicView } from "./navigation";
+import { adminViewFromPath, postLoginDestination, publicRoutes, publicViewFromPath, type AccessIntent, type AdminView, type PublicView } from "./navigation";
 
 const logo = "/manus-storage/prime-frango-logo-3d_7921a8ac.png";
+const ACCESS_INTENT_KEY = "prime-frango-access-intent";
+
+function startRoleLogin(intent: AccessIntent) {
+  if (typeof window !== "undefined") sessionStorage.setItem(ACCESS_INTENT_KEY, intent);
+  startLogin();
+}
 
 const adminItems: { label: string; view: AdminView; icon: typeof LayoutDashboard }[] = [
   { label: "Dashboard", view: "dashboard", icon: LayoutDashboard },
@@ -60,10 +67,23 @@ export default function App() {
 
   return (
     <>
-      {isAdmin ? <AdminShell view={adminViewFromPath(currentPath)} navigate={navigate} /> : <PublicShell view={publicViewFromPath(currentPath)} navigate={navigate} />}
+      <AuthReturn navigate={navigate} />
+      {isAdmin ? <AdminGate view={adminViewFromPath(currentPath)} navigate={navigate} /> : <PublicShell view={publicViewFromPath(currentPath)} navigate={navigate} />}
       <CookieBanner />
     </>
   );
+}
+
+function AuthReturn({ navigate }: { navigate: (path: string) => void }) {
+  const { user, isAuthenticated, loading } = useAuth();
+  useEffect(() => {
+    if (loading || !isAuthenticated || typeof window === "undefined") return;
+    const intent = sessionStorage.getItem(ACCESS_INTENT_KEY);
+    if (!intent) return;
+    sessionStorage.removeItem(ACCESS_INTENT_KEY);
+    navigate(postLoginDestination(intent as AccessIntent, user?.role));
+  }, [isAuthenticated, loading, navigate, user?.role]);
+  return null;
 }
 
 function PublicShell({ view, navigate }: { view: PublicView; navigate: (path: string) => void }) {
@@ -92,6 +112,7 @@ function PublicShell({ view, navigate }: { view: PublicView; navigate: (path: st
       {view === "quem-somos" && <AboutPage go={go} />}
       {view === "acompanhar" && <TrackingPage go={go} />}
       {view === "acesso" && <AccessPage go={go} />}
+      {view === "conta" && <AccountPage go={go} />}
       {view === "checkout" && <CheckoutPage go={go} />}
       <footer className="landing-footer"><img src={logo} alt="Prime Frango Assado" /><button onClick={() => go("cardapio")} type="button">Cardápio</button><button onClick={() => go("quem-somos")} type="button">Quem Somos</button><button onClick={() => go("acompanhar")} type="button">Acompanhar pedido</button><button onClick={() => go("acesso")} type="button">Minha conta</button></footer>
     </div>
@@ -101,10 +122,12 @@ function PublicShell({ view, navigate }: { view: PublicView; navigate: (path: st
 function LandingPage({ go }: { go: (view: PublicView) => void }) {
   return <main>
     <section className="landing-hero">
-      <div><p className="eyebrow">PEDIDO, PREPARO E ENTREGA</p><h1>Frango assado com uma jornada de pedido clara.</h1><p>Cardápio, área de entrega, acompanhamento e suporte em uma experiência conectada para a Prime Frango Assado.</p><div className="hero-actions"><button className="hero-primary" onClick={() => go("cardapio")} type="button">Ver cardápio <ArrowRight size={15} /></button><button className="hero-secondary" onClick={() => go("quem-somos")} type="button">Conheça a marca</button></div></div>
+      <div><p className="eyebrow">PRIME FRANGO ASSADO · BELÉM</p><h1>Frango assado, pedido simples e entrega acompanhada.</h1><p>Escolha no cardápio, valide a área de entrega e acompanhe cada etapa do pedido com uma experiência feita para a Prime Frango Assado.</p><div className="hero-actions"><button className="hero-primary" onClick={() => go("cardapio")} type="button">Pedir agora <ArrowRight size={15} /></button><button className="hero-secondary" onClick={() => go("quem-somos")} type="button">Conheça a marca</button></div><div className="hero-badges"><span>Cardápio atualizado</span><span>Entrega por área</span><span>Pedido acompanhado</span></div></div>
       <div className="hero-product" aria-label="Identidade visual tridimensional da Prime Frango Assado"><img src={logo} alt="Logo 3D da Prime Frango Assado" /><i /><span>3D</span></div>
     </section>
     <section className="landing-sections"><article><MapPinned size={19} /><div><h2>Área de entrega</h2><p>O checkout valida o endereço contra o raio configurado pela operação antes do pagamento.</p></div></article><article><ClipboardList size={19} /><div><h2>Pedido acompanhado</h2><p>Cliente autenticado pode consultar o código, os estágios e a entrega quando houver integração ativa.</p></div></article><article><MessageCircle size={19} /><div><h2>Suporte antes do WhatsApp</h2><p>O chat orienta sobre cardápio, cobertura e status antes de encaminhar o atendimento humano.</p></div></article></section>
+    <section className="landing-menu-preview"><div><p className="eyebrow">CARDÁPIO E PROMOÇÕES</p><h2>Monte o pedido do seu jeito.</h2><p>Frango assado, bebidas, acompanhamentos, promoções do dia e cupons aparecem no cardápio conforme a configuração da operação.</p><button className="hero-primary" onClick={() => go("cardapio")} type="button">Abrir cardápio <ArrowRight size={15} /></button></div><div className="menu-preview-cards"><article><Package size={20} /><b>Frango assado</b><small>Opções e tamanhos configurados pela loja.</small></article><article><CreditCard size={20} /><b>Pagamento seguro</b><small>Escolha o provedor disponível no checkout.</small></article><article><Tags size={20} /><b>Promoção do dia</b><small>Destaques publicados pelo painel administrativo.</small></article></div></section>
+    <section className="landing-route"><div className="route-copy"><p className="eyebrow">DO PEDIDO À ENTREGA</p><h2>Você sabe onde o pedido está.</h2><p>Depois do pagamento, o pedido é analisado, preparado, despachado e acompanhado na sua conta. O mapa é exibido quando a integração de entrega disponibilizar a localização.</p><button className="outline-button" onClick={() => go("acompanhar")} type="button">Acompanhar pedido</button></div><div className="landing-map-art" aria-label="Representação visual da área de entrega"><span className="route-origin" /><span className="route-destination" /><i /><b>Área de entrega configurada</b></div></section>
     <section className="landing-review-note"><Star size={20} /><div><p className="eyebrow">AVALIAÇÕES REAIS</p><h2>O footer publica somente avaliações reais aprovadas pelo proprietário.</h2><p>Nenhum depoimento aparece até que exista uma avaliação de pedido concluído e moderada na área administrativa.</p></div></section>
   </main>;
 }
@@ -122,7 +145,15 @@ function TrackingPage({ go }: { go: (view: PublicView) => void }) {
 }
 
 function AccessPage({ go }: { go: (view: PublicView) => void }) {
-  return <main className="access-page"><section className="access-card"><p className="eyebrow">CONTA DO CLIENTE</p><h1>Entrar ou criar uma conta</h1><p>O fluxo de conta final terá confirmação de e-mail antes da ativação e coleta de nome completo, telefone, endereço, e-mail e CPF.</p><div className="access-actions"><button className="hero-primary" onClick={() => go("checkout")} type="button">Continuar para checkout</button><button className="hero-secondary" onClick={() => go("cardapio")} type="button">Voltar ao cardápio</button></div><small>A autenticação e o envio de e-mail serão ativados após a conexão segura dos serviços no painel administrativo.</small></section></main>;
+  const [mode, setMode] = useState<AccessIntent>("customer");
+  return <main className="access-page"><section className="access-card"><p className="eyebrow">ACESSO SEGURO</p><h1>{mode === "customer" ? "Entre na sua conta" : "Acesso do administrador"}</h1><p>{mode === "customer" ? "Entre para consultar seus pedidos, acompanhar a entrega, manter o carrinho e concluir a compra com segurança." : "Use a conta do proprietário para administrar pedidos, cardápio, promoções, integrações e operações."}</p><div className="access-tabs" role="tablist"><button className={mode === "customer" ? "active" : ""} onClick={() => setMode("customer")} type="button">Cliente</button><button className={mode === "admin" ? "active" : ""} onClick={() => setMode("admin")} type="button">Administrador</button></div><div className="access-actions"><button className="hero-primary" onClick={() => startRoleLogin(mode)} type="button">{mode === "customer" ? "Entrar ou criar conta" : "Entrar no painel administrativo"}<ArrowRight size={15} /></button><button className="hero-secondary" onClick={() => go(mode === "customer" ? "cardapio" : "inicio")} type="button">{mode === "customer" ? "Voltar ao cardápio" : "Voltar ao site"}</button></div><small>O acesso usa uma sessão segura. Na primeira entrada, o provedor cria o perfil de cliente. Caso precise recuperar o acesso, use a opção disponível na janela segura de autenticação. O painel só é liberado para a conta marcada como administradora.</small></section></main>;
+}
+
+function AccountPage({ go }: { go: (view: PublicView) => void }) {
+  const { user, isAuthenticated, loading, logout } = useAuth();
+  if (loading) return <main className="access-page"><section className="access-card"><p className="eyebrow">MINHA CONTA</p><h1>Verificando seu acesso…</h1></section></main>;
+  if (!isAuthenticated) return <main className="access-page"><section className="access-card"><p className="eyebrow">MINHA CONTA</p><h1>Entre para acompanhar seus pedidos.</h1><p>Use a conta segura para salvar seus dados e reencontrar os pedidos realizados.</p><div className="access-actions"><button className="hero-primary" onClick={() => startRoleLogin("customer")} type="button">Entrar ou criar conta <ArrowRight size={15} /></button><button className="hero-secondary" onClick={() => go("cardapio")} type="button">Ver cardápio</button></div></section></main>;
+  return <main className="content-page account-page"><div className="page-intro"><p className="eyebrow">MINHA CONTA</p><h1>Olá, {user?.name || "cliente"}.</h1><p>Seus pedidos, endereços e atualizações aparecerão aqui depois que houver uma compra confirmada.</p></div><section className="account-grid"><article><ClipboardList size={24} /><h2>Meus pedidos</h2><p>Não há pedidos associados a esta conta no momento.</p><button className="hero-primary" onClick={() => go("cardapio")} type="button">Fazer um pedido</button></article><article><MapPinned size={24} /><h2>Acompanhar entrega</h2><p>Quando houver um pedido em andamento, o código e as etapas de preparo e entrega serão exibidos aqui.</p><button className="outline-button" onClick={() => go("acompanhar")} type="button">Acompanhar pedido</button></article></section>{user?.role === "admin" && <button className="approve" onClick={() => window.location.assign("/admin/dashboard")} type="button">Abrir painel administrativo</button>}<button className="outline-button account-logout" onClick={() => logout()} type="button">Sair da conta</button></main>;
 }
 
 function CheckoutPage({ go }: { go: (view: PublicView) => void }) {
@@ -130,6 +161,14 @@ function CheckoutPage({ go }: { go: (view: PublicView) => void }) {
   const providersQuery = trpc.payments.availableProviders.useQuery(undefined, { retry: false });
   const available = new Set((providersQuery.data ?? []).map((item) => item.provider));
   return <main className="content-page checkout-page"><div className="page-intro"><p className="eyebrow">CHECKOUT</p><h1>Revise o pedido antes de pagar.</h1><p>O carrinho, o endereço, o cupom, a cobertura e o pagamento serão validados em sequência.</p></div><section className="checkout-grid"><article><h2>1. Seu pedido</h2><p>O resumo será preenchido pelos itens escolhidos no cardápio.</p></article><article><h2>2. Endereço e cobertura</h2><p>A distância é calculada a partir da origem configurada e o checkout é bloqueado fora do raio de entrega.</p></article><article><h2>3. Pagamento</h2><p>Escolha um provedor configurado antes de continuar.</p><div className="payment-options"><button className={provider === "stripe" ? "selected" : ""} disabled={!available.has("stripe")} onClick={() => setProvider("stripe")} type="button">Stripe {available.has("stripe") ? "pronto" : "aguardando conexão"}</button><button className={provider === "mercado_pago" ? "selected" : ""} disabled={!available.has("mercado_pago")} onClick={() => setProvider("mercado_pago")} type="button">Mercado Pago {available.has("mercado_pago") ? "pronto" : "aguardando conexão"}</button></div></article></section><button className="hero-primary" onClick={() => go("acesso")} type="button">{provider ? `Entrar para continuar com ${provider === "stripe" ? "Stripe" : "Mercado Pago"}` : "Entrar para continuar"}</button></main>;
+}
+
+function AdminGate({ view, navigate }: { view: AdminView; navigate: (path: string) => void }) {
+  const { user, isAuthenticated, loading } = useAuth();
+  if (loading) return <main className="admin-access"><section><p className="eyebrow">PAINEL ADMINISTRATIVO</p><h1>Verificando acesso…</h1></section></main>;
+  if (!isAuthenticated) return <main className="admin-access"><section><p className="eyebrow">PAINEL ADMINISTRATIVO</p><h1>Entre para acessar a operação.</h1><p>Pedidos, dados financeiros e integrações ficam disponíveis somente para a conta administradora.</p><button className="hero-primary" onClick={() => startRoleLogin("admin")} type="button">Entrar como administrador <ArrowRight size={15} /></button></section></main>;
+  if (user?.role !== "admin") return <main className="admin-access"><section><p className="eyebrow">ACESSO RESTRITO</p><h1>Esta conta não possui permissão administrativa.</h1><p>Você pode continuar na área de cliente ou entrar novamente com a conta do proprietário.</p><div className="access-actions"><button className="hero-primary" onClick={() => navigate("/minha-conta")} type="button">Ir para minha conta</button><button className="hero-secondary dark-outline" onClick={() => startRoleLogin("admin")} type="button">Trocar de conta</button></div></section></main>;
+  return <AdminShell view={view} navigate={navigate} />;
 }
 
 function AdminShell({ view, navigate }: { view: AdminView; navigate: (path: string) => void }) {

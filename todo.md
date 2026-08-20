@@ -1,4 +1,5 @@
-- [x] Definir os campos de credenciais e a regra de mascaramento no painel de Integrações.
-- [x] Implementar formulários administrativos para Mercado Pago, Stripe, mapas, WhatsApp, e-mail e IA.
-- [x] Encaminhar segredos para armazenamento protegido no servidor, sem exibição posterior da chave completa.
-- [x] Validar os formulários, documentar a ativação e preparar os arquivos para GitHub.
+- [x] Comparar a landing page publicada com o protótipo aprovado e listar as divergências visuais e funcionais.
+- [x] Restaurar a landing page com hierarquia, seções e efeitos coerentes com o protótipo aprovado.
+- [x] Criar uma tela clara de acesso para cliente, com criação de perfil no primeiro acesso OAuth e orientação para recuperação pelo provedor de identidade.
+- [x] Criar um acesso administrativo com entrada distinta e proteção por perfil.
+- [x] Validar os fluxos completos em desktop e mobile antes de publicar a correção.

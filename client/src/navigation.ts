@@ -12,7 +12,8 @@ export type AdminView =
   | "marketing"
   | "operacoes";
 
-export type PublicView = "inicio" | "cardapio" | "quem-somos" | "acompanhar" | "acesso" | "checkout";
+export type PublicView = "inicio" | "cardapio" | "quem-somos" | "acompanhar" | "acesso" | "conta" | "checkout";
+export type AccessIntent = "customer" | "admin";
 
 export const publicRoutes: Record<PublicView, string> = {
   inicio: "/",
@@ -20,6 +21,7 @@ export const publicRoutes: Record<PublicView, string> = {
   "quem-somos": "/quem-somos",
   acompanhar: "/acompanhar-pedido",
   acesso: "/acesso",
+  conta: "/minha-conta",
   checkout: "/checkout",
 };
 
@@ -44,6 +46,7 @@ export function publicViewFromPath(path: string): PublicView {
   if (clean === "/quem-somos") return "quem-somos";
   if (clean === "/acompanhar-pedido") return "acompanhar";
   if (clean === "/acesso") return "acesso";
+  if (clean === "/minha-conta") return "conta";
   if (clean === "/checkout") return "checkout";
   return "inicio";
 }
@@ -51,4 +54,8 @@ export function publicViewFromPath(path: string): PublicView {
 export function adminViewFromPath(path: string): AdminView {
   const view = path.replace(/^\/admin\/?/, "").replace(/\/+$/, "") as AdminView;
   return adminViews.includes(view) ? view : "dashboard";
+}
+
+export function postLoginDestination(intent: AccessIntent, role: "user" | "admin" | undefined): string {
+  return intent === "admin" && role === "admin" ? "/admin/dashboard" : "/minha-conta";
 }
