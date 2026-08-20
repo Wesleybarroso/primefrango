@@ -3,4 +3,4 @@
 - [x] Implementar SEO técnico: metadados, canonical, robots, sitemap, Open Graph e dados estruturados locais.
 - [x] Ajustar layouts para telas mobile e validar todas as páginas principais.
 - [x] Atualizar PDFs com as melhorias, as evidências mobile e a arquitetura final.
-- [ ] Salvar checkpoint e entregar projeto, PDFs e capturas profissionais.
+- [x] Salvar checkpoint e entregar projeto, PDFs e capturas profissionais.
