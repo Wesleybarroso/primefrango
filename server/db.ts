@@ -1,7 +1,8 @@
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, IntegrationProvider, integrationSettings, users } from "../drizzle/schema";
+import { InsertUser, IntegrationProvider, Promotion, integrationSettings, promotions, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
+import { isPublicPromotion } from "./promotions";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -115,6 +116,51 @@ export async function saveIntegrationSetting(input: {
       isEnabled: true,
     },
   });
+}
+
+export type PromotionInput = {
+  title: string;
+  description: string;
+  badge?: string | null;
+  startsAt?: Date | null;
+  endsAt?: Date | null;
+  status: "draft" | "active" | "archived";
+};
+
+export async function listPromotions() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(promotions).orderBy(desc(promotions.updatedAt));
+}
+
+export async function listPublicPromotions() {
+  const allPromotions = await listPromotions();
+  return allPromotions.filter((promotion) => isPublicPromotion(promotion));
+}
+
+export async function createPromotion(input: PromotionInput) {
+  const db = await getDb();
+  if (!db) throw new Error("Banco de dados indisponível para salvar a promoção.");
+  const result = await db.insert(promotions).values(input);
+  return Number(result[0].insertId);
+}
+
+export async function updatePromotion(id: number, input: PromotionInput) {
+  const db = await getDb();
+  if (!db) throw new Error("Banco de dados indisponível para atualizar a promoção.");
+  await db.update(promotions).set(input).where(eq(promotions.id, id));
+}
+
+export async function setPromotionStatus(id: number, status: PromotionInput["status"]) {
+  const db = await getDb();
+  if (!db) throw new Error("Banco de dados indisponível para atualizar a promoção.");
+  await db.update(promotions).set({ status }).where(eq(promotions.id, id));
+}
+
+export async function removePromotion(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Banco de dados indisponível para remover a promoção.");
+  await db.delete(promotions).where(eq(promotions.id, id));
 }
 
 // TODO: add feature queries here as your schema grows.

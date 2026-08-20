@@ -44,9 +44,24 @@ export const integrationSettings = mysqlTable("integration_settings", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
+export const promotionStatus = mysqlEnum("promotion_status", ["draft", "active", "archived"]);
+
+export const promotions = mysqlTable("promotions", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 120 }).notNull(),
+  description: text("description").notNull(),
+  badge: varchar("badge", { length: 48 }),
+  startsAt: timestamp("startsAt"),
+  endsAt: timestamp("endsAt"),
+  status: promotionStatus.notNull().default("draft"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 export type IntegrationProvider = "stripe" | "mercado_pago" | "google_maps" | "whatsapp" | "email" | "assistant_ia";
 export type IntegrationSetting = typeof integrationSettings.$inferSelect;
+export type Promotion = typeof promotions.$inferSelect;
 
 // TODO: Add your tables here

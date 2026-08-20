@@ -3,3 +3,15 @@
 - [x] Criar uma tela clara de acesso para cliente, com criação de perfil no primeiro acesso OAuth e orientação para recuperação pelo provedor de identidade.
 - [x] Criar um acesso administrativo com entrada distinta e proteção por perfil.
 - [x] Validar os fluxos completos em desktop e mobile antes de publicar a correção.
+- [x] Diagnosticar o erro publicado "OAuth callback failed" ao retornar do provedor de login.
+- [x] Corrigir a troca do código OAuth e o redirecionamento pós-login em domínio publicado e móvel.
+- [ ] Validar o fluxo de entrada de cliente e administrador sem expor credenciais pessoais.
+- [x] Verificar o perfil OAuth autenticado e promover a conta proprietária ao papel administrativo correto.
+- [x] Garantir que a entrada como administrador abra o painel completo em vez da área de cliente.
+- [ ] Confirmar as funcionalidades disponíveis no painel após a correção de permissão.
+- [x] Criar estrutura persistente para promoções com título, descrição, vigência e status de publicação.
+- [x] Implementar criação, edição, ativação e remoção de promoções no painel administrativo.
+- [x] Exibir a promoção ativa de forma segura na landing page e no cardápio.
+- [ ] Validar o módulo de promoções em desktop e mobile e publicar a correção.
+- [x] Adicionar mensagens visíveis para falhas de criação, edição, ativação e remoção de promoções.
+- [ ] Confirmar manualmente a criação, ativação, edição e remoção de uma promoção no painel publicado.
