@@ -15,6 +15,13 @@
       "when": 1787266173827,
       "tag": "0001_noisy_golden_guardian",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1787267989399,
+      "tag": "0002_last_frank_castle",
+      "breakpoints": true
     }
   ]
 }

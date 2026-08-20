@@ -122,6 +122,9 @@ export type PromotionInput = {
   title: string;
   description: string;
   badge?: string | null;
+  originalPriceCents: number;
+  salePriceCents?: number | null;
+  imageUrls?: string[];
   startsAt?: Date | null;
   endsAt?: Date | null;
   status: "draft" | "active" | "archived";
@@ -141,14 +144,16 @@ export async function listPublicPromotions() {
 export async function createPromotion(input: PromotionInput) {
   const db = await getDb();
   if (!db) throw new Error("Banco de dados indisponível para salvar a promoção.");
-  const result = await db.insert(promotions).values(input);
+  const { imageUrls = [], ...data } = input;
+  const result = await db.insert(promotions).values({ ...data, image1Url: imageUrls[0] ?? null, image2Url: imageUrls[1] ?? null, image3Url: imageUrls[2] ?? null });
   return Number(result[0].insertId);
 }
 
 export async function updatePromotion(id: number, input: PromotionInput) {
   const db = await getDb();
   if (!db) throw new Error("Banco de dados indisponível para atualizar a promoção.");
-  await db.update(promotions).set(input).where(eq(promotions.id, id));
+  const { imageUrls = [], ...data } = input;
+  await db.update(promotions).set({ ...data, image1Url: imageUrls[0] ?? null, image2Url: imageUrls[1] ?? null, image3Url: imageUrls[2] ?? null }).where(eq(promotions.id, id));
 }
 
 export async function setPromotionStatus(id: number, status: PromotionInput["status"]) {

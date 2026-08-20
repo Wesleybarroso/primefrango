@@ -15,3 +15,10 @@
 - [ ] Validar o módulo de promoções em desktop e mobile e publicar a correção.
 - [x] Adicionar mensagens visíveis para falhas de criação, edição, ativação e remoção de promoções.
 - [ ] Confirmar manualmente a criação, ativação, edição e remoção de uma promoção no painel publicado.
+- [x] Permitir o envio seguro de até três imagens reais por combo promocional.
+- [x] Adicionar preço original, preço promocional e validação comercial ao cadastro de promoções.
+- [x] Melhorar o layout móvel, os controles de imagem e os botões da área administrativa.
+- [x] Apresentar imagens e preços das promoções ativas na landing page e no cardápio.
+- [ ] Validar o cadastro completo de combo em desktop e mobile e publicar a melhoria.
+- [x] Exibir as três imagens disponíveis em galeria na landing page e no cardápio público.
+- [ ] Validar visualmente a galeria de combos com uma, duas e três imagens em desktop e mobile.
