@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /acesso
+Disallow: /checkout
+Disallow: /acompanhar-pedido
+
+Sitemap: https://parallax3d-d74b7sph.manus.space/sitemap.xml

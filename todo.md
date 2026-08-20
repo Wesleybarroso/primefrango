@@ -1,5 +1,6 @@
-- [ ] Criar as telas de Marketing, Operações, Quem Somos e os dois estados de avaliações da landing page.
-- [ ] Capturar todas as telas do protótipo em uma sequência organizada por nível de acesso.
-- [ ] Produzir o PDF completo do protótipo com páginas, ações e permissões de cliente e administrador.
-- [ ] Produzir o PDF do design system, arquitetura Next.js, backend Node.js, PostgreSQL e animações.
-- [ ] Validar os dois PDFs e entregar o pacote final profissional.
+- [x] Auditar navegação, rotas, ações e coerência entre páginas públicas, cliente e painel administrativo.
+- [x] Implementar navegação funcional, menu mobile, aviso de cookies e preferências persistentes, com teste de rotas e armazenamento local.
+- [x] Implementar SEO técnico: metadados, canonical, robots, sitemap, Open Graph e dados estruturados locais.
+- [x] Ajustar layouts para telas mobile e validar todas as páginas principais.
+- [x] Atualizar PDFs com as melhorias, as evidências mobile e a arquitetura final.
+- [ ] Salvar checkpoint e entregar projeto, PDFs e capturas profissionais.
