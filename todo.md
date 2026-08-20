@@ -1,0 +1,5 @@
+- [ ] Criar as telas de Marketing, Operações, Quem Somos e os dois estados de avaliações da landing page.
+- [ ] Capturar todas as telas do protótipo em uma sequência organizada por nível de acesso.
+- [ ] Produzir o PDF completo do protótipo com páginas, ações e permissões de cliente e administrador.
+- [ ] Produzir o PDF do design system, arquitetura Next.js, backend Node.js, PostgreSQL e animações.
+- [ ] Validar os dois PDFs e entregar o pacote final profissional.
