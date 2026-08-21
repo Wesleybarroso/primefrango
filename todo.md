@@ -76,3 +76,6 @@
 - [x] Substituir a credencial WhatsApp armazenada pela chave global Evolution Go validada, de modo cifrado.
 - [x] Distinguir no painel a URL base da API Evolution Go da URL de webhook de entrada.
 - [x] Criar receptor protegido para eventos Evolution Go sem registrar conteúdo de mensagens.
+- [x] Adicionar um botão de saída seguro e acessível à lateral do painel administrativo, inclusive em celular.
+- [x] Garantir que cada item da lateral administrativa abra um módulo com estado funcional, ação disponível ou orientação explícita.
+- [ ] Validar o redirecionamento autenticado do checkout para o link Stripe hospedado sem concluir pagamento.

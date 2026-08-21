@@ -13,6 +13,7 @@ import {
   HeartHandshake,
   ImagePlus,
   LayoutDashboard,
+  LogOut,
   MapPinned,
   Menu,
   MessageCircle,
@@ -249,10 +250,12 @@ function AdminGate({ view, navigate }: { view: AdminView; navigate: (path: strin
 }
 
 function AdminShell({ view, navigate }: { view: AdminView; navigate: (path: string) => void }) {
+  const { logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [notice, setNotice] = useState("");
   const nav = (next: AdminView) => { setMenuOpen(false); navigate(`/admin/${next}`); };
+  const signOut = async () => { setMenuOpen(false); try { await logout(); navigate("/"); } catch { setNotice("Não foi possível encerrar a sessão agora. Tente novamente."); } };
   const titles: Record<AdminView, [string, string]> = {
     dashboard: ["Dashboard", "Visão geral do negócio e indicadores reais."], pedidos: ["Pedidos", "Avalie, prepare e atualize pedidos recebidos."], mapa: ["Mapa Operacional", "Acompanhe entregas quando a logística fornecer localização."], cardapio: ["Cardápio", "Gerencie produtos, disponibilidade e categorias."], promocoes: ["Promoções", "Organize ofertas e destaque do dia."], cupons: ["Cupons", "Crie códigos e regras de desconto."], avaliacoes: ["Avaliações", "Modere avaliações reais recebidas após pedidos."], clientes: ["Clientes", "Consulte clientes e histórico de relacionamento."], financeiro: ["Financeiro", "Acompanhe a saúde financeira do negócio."], integracoes: ["Integrações", "Conecte mapas, pagamentos, logística, mensagens e e-mail."], marketing: ["Marketing", "Controle conteúdo da landing page e campanhas."], operacoes: ["Operações", "Concentre aprovação, preparo, despacho e entrega."],
   };
@@ -260,7 +263,7 @@ function AdminShell({ view, navigate }: { view: AdminView; navigate: (path: stri
     <aside className={menuOpen ? "sidebar mobile-open" : "sidebar"}>
       <button className="brand-button" type="button" onClick={() => navigate("/")} aria-label="Abrir site público"><img className="brand-logo" src={logo} alt="Prime Frango Assado" /></button><p className="admin-label">ADMIN</p>
       <nav aria-label="Navegação administrativa">{adminItems.map(({ label, view: itemView, icon: Icon }) => <button className={itemView === view ? "nav-item active" : "nav-item"} key={itemView} onClick={() => nav(itemView)} type="button"><Icon size={15} strokeWidth={1.9} /><span>{label}</span></button>)}</nav>
-      <button className="collapse" onClick={() => setCollapsed((value) => !value)} aria-label={collapsed ? "Expandir menu" : "Recolher menu"} type="button"><ChevronDown size={17} /></button>
+      <div className="sidebar-footer"><button className="sidebar-logout" onClick={signOut} type="button"><LogOut size={16} /><span>Sair da conta</span></button><button className="collapse" onClick={() => setCollapsed((value) => !value)} aria-label={collapsed ? "Expandir menu" : "Recolher menu"} type="button"><ChevronDown size={17} /></button></div>
     </aside>
     {menuOpen && <button className="sidebar-scrim" aria-label="Fechar menu" onClick={() => setMenuOpen(false)} type="button" />}
     <main className="admin-main"><header className="topbar"><div className="topbar-title"><button className="admin-menu-toggle" type="button" onClick={() => setMenuOpen(true)} aria-label="Abrir menu administrativo"><Menu size={19} /></button><div><h1>{titles[view][0]}</h1><p>{titles[view][1]}</p></div></div><div className="topbar-actions"><button className="period-button" type="button" onClick={() => setNotice("Filtro de período pronto para conectar aos dados reais.")}><Menu size={14} /> Últimos 30 dias <ChevronDown size={15} /></button><button className="profile-button" type="button" onClick={() => setNotice("Perfil administrativo protegido por autenticação.")}><Bell size={16} /><span>Proprietário</span><ChevronDown size={14} /></button></div></header>
@@ -280,11 +283,11 @@ function AdminContent({ view, onNotice, onNavigate }: { view: AdminView; onNotic
   if (view === "marketing") return <Marketing onNavigate={onNavigate} />;
   if (view === "operacoes") return <Operacoes onNotice={onNotice} />;
   if (view === "integracoes") return <Integracoes onNotice={onNotice} />;
-  const map: Record<Exclude<AdminView, "financeiro" | "clientes" | "avaliacoes" | "marketing" | "operacoes" | "integracoes" | "promocoes" | "cupons" | "cardapio">, { title: string; text: string; action: string; icon: typeof Package }> = {
-    dashboard: { title: "Indicadores do negócio", text: "Pedidos do dia, receita, ticket médio, entregas e tendências aparecem quando existirem dados confirmados.", action: "Ver operações", icon: BarChart3 }, pedidos: { title: "Central de pedidos", text: "Pedidos pagos entram em análise e só seguem para preparo após aprovação administrativa.", action: "Abrir operações", icon: ClipboardList }, mapa: { title: "Mapa de entregas", text: "O mapa apresenta origem, rota e posições de entrega apenas quando a logística disponibilizar localização.", action: "Ver operações", icon: MapPinned },
+  const map: Record<Exclude<AdminView, "financeiro" | "clientes" | "avaliacoes" | "marketing" | "operacoes" | "integracoes" | "promocoes" | "cupons" | "cardapio">, { title: string; text: string; action: string; target: AdminView; icon: typeof Package }> = {
+    dashboard: { title: "Indicadores do negócio", text: "Pedidos do dia, receita, ticket médio, entregas e tendências aparecem quando existirem dados confirmados.", action: "Ver pedidos", target: "pedidos", icon: BarChart3 }, pedidos: { title: "Central de pedidos", text: "Pedidos pagos entram em análise e só seguem para preparo após aprovação administrativa.", action: "Abrir operações", target: "operacoes", icon: ClipboardList }, mapa: { title: "Mapa de entregas", text: "O mapa apresenta origem, rota e posições de entrega apenas quando a logística disponibilizar localização.", action: "Ver operações", target: "operacoes", icon: MapPinned },
   };
   const item = map[view as keyof typeof map]; const Icon = item.icon;
-  return <section className="admin-module"><article className="module-hero"><div className="module-icon"><Icon size={24} /></div><div><p className="eyebrow">MÓDULO ADMINISTRATIVO</p><h2>{item.title}</h2><p>{item.text}</p></div><button className="approve" type="button" onClick={() => onNavigate(view === "dashboard" || view === "pedidos" || view === "mapa" ? "operacoes" : "marketing")}>{item.action}<ArrowRight size={14} /></button></article><div className="module-cards"><InfoCard title="Dados reais" text="A interface permanece vazia até a operação registrar informações válidas." /><InfoCard title="Acesso controlado" text="O módulo pertence à área administrativa e será protegido por autenticação." /><InfoCard title="Próxima ação" text="Use o botão principal para chegar ao módulo operacional correspondente." /></div></section>;
+  return <section className="admin-module"><article className="module-hero"><div className="module-icon"><Icon size={24} /></div><div><p className="eyebrow">MÓDULO ADMINISTRATIVO</p><h2>{item.title}</h2><p>{item.text}</p></div><button className="approve" type="button" onClick={() => onNavigate(item.target)}>{item.action}<ArrowRight size={14} /></button></article><div className="module-cards"><InfoCard title="Dados reais" text="A interface permanece vazia até a operação registrar informações válidas." /><InfoCard title="Acesso controlado" text="O módulo pertence à área administrativa e será protegido por autenticação." /><InfoCard title="Próxima ação" text="Use o botão principal para chegar ao módulo operacional correspondente." /></div></section>;
 }
 
 type PromotionForm = { title: string; description: string; badge: string; originalPrice: string; salePrice: string; startsAt: string; endsAt: string; status: "draft" | "active" | "archived" };
