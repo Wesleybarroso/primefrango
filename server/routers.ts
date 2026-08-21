@@ -3,13 +3,13 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { encryptCredential, maskCredential } from "./credentials";
 import { getSessionCookieOptions } from "./_core/cookies";
-import { createCoupon, createPromotion, listCoupons, listEmailDeliverySettings, listIntegrationSettings, listPromotions, listPublicPromotions, removeCoupon, removePromotion, saveEmailDeliverySetting, saveIntegrationSetting, setCouponStatus, setPromotionStatus, updateCoupon, updatePromotion } from "./db";
+import { createCoupon, createMenuCategory, createMenuItem, createPromotion, getGoogleMetricsSettings, getMenuCategoryById, listCoupons, listEmailDeliverySettings, listIntegrationSettings, listMenuCategories, listMenuItems, listPromotions, listPublicMenuCatalog, listPublicPromotions, removeCoupon, removeMenuCategory, removeMenuItem, removePromotion, saveEmailDeliverySetting, saveGoogleMetricsSettings, saveIntegrationSetting, setCouponStatus, setPromotionStatus, updateCoupon, updateMenuCategory, updateMenuItem, updatePromotion } from "./db";
 import { sendEmailConnectionTest } from "./emailDelivery";
 import { storagePut } from "./storage";
 import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, publicProcedure, router } from "./_core/trpc";
 
-const integrationProviderSchema = z.enum(["stripe", "mercado_pago", "google_maps", "whatsapp", "email", "assistant_ia"]);
+const integrationProviderSchema = z.enum(["stripe", "mercado_pago", "pagbank", "google_maps", "whatsapp", "email", "assistant_ia"]);
 const promotionStatusSchema = z.enum(["draft", "active", "archived"]);
 const promotionInputSchema = z.object({
   title: z.string().trim().min(3).max(120),
@@ -63,6 +63,10 @@ const emailDeliverySchema = z.object({
   if (value.provider === "smtp" && !value.smtpUsername) context.addIssue({ code: z.ZodIssueCode.custom, path: ["smtpUsername"], message: "Informe o usuário SMTP." });
 });
 
+const googleMetricsSchema = z.object({ gaMeasurementId: z.string().trim().regex(/^G-[A-Z0-9]+$/, "Use um ID GA4 no formato G-XXXXXXXX.").optional().or(z.literal("")), gtmContainerId: z.string().trim().regex(/^GTM-[A-Z0-9]+$/, "Use um contêiner GTM no formato GTM-XXXXXX.").optional().or(z.literal("")), searchConsoleProperty: z.string().trim().url().max(2048).optional().or(z.literal("")), searchConsoleVerification: z.string().trim().max(512).optional().or(z.literal("")) });
+const menuCategorySchema = z.object({ name: z.string().trim().min(2).max(64), isActive: z.boolean(), sortOrder: z.number().int().min(0).max(999) });
+const menuItemSchema = z.object({ categoryId: z.number().int().positive(), title: z.string().trim().min(2).max(120), description: z.string().trim().max(600).optional().or(z.literal("")), priceCents: z.number().int().positive(), imageUrl: z.string().startsWith("/manus-storage/").optional().or(z.literal("")), isAvailable: z.boolean(), sortOrder: z.number().int().min(0).max(999) });
+
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
   system: systemRouter,
@@ -108,9 +112,33 @@ export const appRouter = router({
     availableProviders: publicProcedure.query(async () => {
       const settings = await listIntegrationSettings();
       return settings
-        .filter((item) => item.isEnabled && (item.provider === "stripe" || item.provider === "mercado_pago"))
+        .filter((item) => item.isEnabled && (item.provider === "stripe" || item.provider === "mercado_pago" || item.provider === "pagbank"))
         .map((item) => ({ provider: item.provider, label: item.label }));
     }),
+  }),
+  googleMetrics: router({
+    publicConfig: publicProcedure.query(async () => { const setting = await getGoogleMetricsSettings(); return setting ? { gaMeasurementId: setting.gaMeasurementId, gtmContainerId: setting.gtmContainerId, searchConsoleVerification: setting.searchConsoleVerification, isEnabled: setting.isEnabled } : null; }),
+    adminConfig: adminProcedure.query(async () => getGoogleMetricsSettings()),
+    save: adminProcedure.input(googleMetricsSchema).mutation(async ({ input }) => ({ id: await saveGoogleMetricsSettings({ gaMeasurementId: input.gaMeasurementId || null, gtmContainerId: input.gtmContainerId || null, searchConsoleProperty: input.searchConsoleProperty || null, searchConsoleVerification: input.searchConsoleVerification || null }) })),
+  }),
+  menu: router({
+    publicCatalog: publicProcedure.query(async () => listPublicMenuCatalog()),
+    adminCatalog: adminProcedure.query(async () => ({ categories: await listMenuCategories(), items: await listMenuItems() })),
+    uploadImage: adminProcedure.input(promotionImageSchema).mutation(async ({ ctx, input }) => {
+      const match = promotionImageDataUrl.exec(input.dataUrl);
+      if (!match) throw new TRPCError({ code: "BAD_REQUEST", message: "Envie somente imagens PNG, JPEG ou WebP." });
+      const [, contentType, base64] = match;
+      const bytes = Buffer.from(base64, "base64");
+      if (bytes.byteLength > 5 * 1024 * 1024) throw new TRPCError({ code: "PAYLOAD_TOO_LARGE", message: "A imagem deve ter no máximo 5 MB." });
+      const extension = contentType === "image/jpeg" ? "jpg" : contentType.split("/")[1];
+      return storagePut(`menu/${ctx.user.id}/item-${Date.now()}.${extension}`, bytes, contentType);
+    }),
+    createCategory: adminProcedure.input(menuCategorySchema).mutation(async ({ input }) => ({ id: await createMenuCategory(input) })),
+    updateCategory: adminProcedure.input(z.object({ id: z.number().int().positive(), data: menuCategorySchema })).mutation(async ({ input }) => { await updateMenuCategory(input.id, input.data); return { success: true } as const; }),
+    removeCategory: adminProcedure.input(z.object({ id: z.number().int().positive() })).mutation(async ({ input }) => { await removeMenuCategory(input.id); return { success: true } as const; }),
+    createItem: adminProcedure.input(menuItemSchema).mutation(async ({ input }) => { if (!await getMenuCategoryById(input.categoryId)) throw new TRPCError({ code: "BAD_REQUEST", message: "A categoria selecionada não existe mais. Atualize o Cardápio e tente novamente." }); return { id: await createMenuItem({ ...input, description: input.description || null, imageUrl: input.imageUrl || null }) }; }),
+    updateItem: adminProcedure.input(z.object({ id: z.number().int().positive(), data: menuItemSchema })).mutation(async ({ input }) => { if (!await getMenuCategoryById(input.data.categoryId)) throw new TRPCError({ code: "BAD_REQUEST", message: "A categoria selecionada não existe mais. Atualize o Cardápio e tente novamente." }); await updateMenuItem(input.id, { ...input.data, description: input.data.description || null, imageUrl: input.data.imageUrl || null }); return { success: true } as const; }),
+    removeItem: adminProcedure.input(z.object({ id: z.number().int().positive() })).mutation(async ({ input }) => { await removeMenuItem(input.id); return { success: true } as const; }),
   }),
   promotions: router({
     publicList: publicProcedure.query(async () => listPublicPromotions()),

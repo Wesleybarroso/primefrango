@@ -38,3 +38,23 @@
 - [x] Permitir configurar preferências de e-mails transacionais; o aviso de novo login já é acionado, enquanto os demais dependem dos futuros fluxos locais correspondentes.
 - [x] Melhorar a tela de Integrações para apresentar estado, campos e orientações específicos para Resend e SMTP.
 - [ ] Validar a configuração de e-mail em desktop e mobile e publicar a evolução.
+- [ ] Adicionar PagBank ao catálogo de pagamentos configuráveis com credencial cifrada e status no checkout.
+- [ ] Adicionar configuração de Google Analytics 4, Google Tag Manager e Google Search Console na área de Integrações.
+- [ ] Exibir um painel empresarial de métricas com estado seguro para dados ainda não conectados.
+- [ ] Validar as novas integrações em desktop e mobile e publicar a evolução.
+- [x] Auditar e corrigir a estrutura atual da seção pública de Cardápio.
+- [x] Criar categorias e itens de cardápio persistentes, com preço, disponibilidade e imagem opcional.
+- [x] Permitir ao administrador criar, editar, ativar e remover itens do Cardápio.
+- [x] Implementar carrinho funcional com adição, remoção, quantidade e subtotal no Cardápio.
+- [ ] Validar Cardápio e carrinho em desktop e mobile e publicar a correção.
+- [x] Diagnosticar por que combos ativos não entram no carrinho como itens compráveis.
+- [x] Corrigir o retorno do checkout ao Cardápio preservando os itens selecionados.
+- [x] Impedir redirecionamento indevido de autenticação e perda de sessão durante a compra.
+- [x] Exibir erros de catálogo e ações de recuperação no Cardápio e Checkout.
+- [ ] Validar o fluxo completo de cliente: login, compra de combo, edição de carrinho e checkout.
+- [x] Validar obrigatoriamente a existência da categoria antes de salvar um item do Cardápio.
+- [x] Exibir estado de erro e ação de nova tentativa no catálogo administrativo.
+- [x] Cobrir em teste o bloqueio de item associado a categoria inexistente e a preservação do carrinho no retorno do checkout.
+- [x] Exibir erro e ação de nova tentativa quando os provedores de pagamento não puderem ser carregados no Checkout.
+- [x] Cobrir o retorno ao checkout após autenticação mantendo os itens do carrinho selecionados.
+- [x] Testar a reidratação do carrinho persistido no retorno do login ao checkout.

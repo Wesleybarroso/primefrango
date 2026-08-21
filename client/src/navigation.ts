@@ -59,3 +59,8 @@ export function adminViewFromPath(path: string): AdminView {
 export function postLoginDestination(intent: AccessIntent, role: "user" | "admin" | undefined): string {
   return intent === "admin" && role === "admin" ? "/admin/dashboard" : "/minha-conta";
 }
+
+export function resolvePostLoginPath(returnPath: string | null, intent: AccessIntent | null, role: "user" | "admin" | undefined): string | null {
+  if (returnPath && returnPath.startsWith("/")) return returnPath;
+  return intent ? postLoginDestination(intent, role) : null;
+}

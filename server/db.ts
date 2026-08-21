@@ -1,6 +1,6 @@
 import { desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, IntegrationProvider, Promotion, coupons, emailDeliverySettings, integrationSettings, promotions, users } from "../drizzle/schema";
+import { InsertUser, IntegrationProvider, Promotion, coupons, emailDeliverySettings, googleMetricsSettings, integrationSettings, menuCategories, menuItems, promotions, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { isPublicPromotion } from "./promotions";
 
@@ -116,6 +116,95 @@ export async function saveIntegrationSetting(input: {
       isEnabled: true,
     },
   });
+}
+
+export type GoogleMetricsInput = { gaMeasurementId?: string | null; gtmContainerId?: string | null; searchConsoleProperty?: string | null; searchConsoleVerification?: string | null };
+
+export async function getGoogleMetricsSettings() {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(googleMetricsSettings).limit(1);
+  return result[0];
+}
+
+export async function saveGoogleMetricsSettings(input: GoogleMetricsInput) {
+  const db = await getDb();
+  if (!db) throw new Error("Banco de dados indisponível para salvar as métricas Google.");
+  const current = await getGoogleMetricsSettings();
+  const isEnabled = Boolean(input.gaMeasurementId || input.gtmContainerId || input.searchConsoleProperty);
+  if (current) {
+    await db.update(googleMetricsSettings).set({ ...input, isEnabled }).where(eq(googleMetricsSettings.id, current.id));
+    return current.id;
+  }
+  const result = await db.insert(googleMetricsSettings).values({ ...input, isEnabled });
+  return Number(result[0].insertId);
+}
+
+export type MenuCategoryInput = { name: string; isActive: boolean; sortOrder: number };
+export type MenuItemInput = { categoryId: number; title: string; description?: string | null; priceCents: number; imageUrl?: string | null; isAvailable: boolean; sortOrder: number };
+
+export async function listMenuCategories() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(menuCategories).orderBy(menuCategories.sortOrder, menuCategories.name);
+}
+
+export async function getMenuCategoryById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(menuCategories).where(eq(menuCategories.id, id)).limit(1);
+  return result[0];
+}
+
+export async function listMenuItems() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(menuItems).orderBy(menuItems.sortOrder, menuItems.title);
+}
+
+export async function listPublicMenuCatalog() {
+  const [categories, items] = await Promise.all([listMenuCategories(), listMenuItems()]);
+  return categories.filter((category) => category.isActive).map((category) => ({ ...category, items: items.filter((item) => item.categoryId === category.id && item.isAvailable) }));
+}
+
+export async function createMenuCategory(input: MenuCategoryInput) {
+  const db = await getDb();
+  if (!db) throw new Error("Banco de dados indisponível para salvar a categoria.");
+  const result = await db.insert(menuCategories).values(input);
+  return Number(result[0].insertId);
+}
+
+export async function updateMenuCategory(id: number, input: MenuCategoryInput) {
+  const db = await getDb();
+  if (!db) throw new Error("Banco de dados indisponível para atualizar a categoria.");
+  await db.update(menuCategories).set(input).where(eq(menuCategories.id, id));
+}
+
+export async function removeMenuCategory(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Banco de dados indisponível para remover a categoria.");
+  const items = await db.select({ id: menuItems.id }).from(menuItems).where(eq(menuItems.categoryId, id)).limit(1);
+  if (items.length) throw new Error("Remova ou mova os itens desta categoria antes de excluí-la.");
+  await db.delete(menuCategories).where(eq(menuCategories.id, id));
+}
+
+export async function createMenuItem(input: MenuItemInput) {
+  const db = await getDb();
+  if (!db) throw new Error("Banco de dados indisponível para salvar o item.");
+  const result = await db.insert(menuItems).values(input);
+  return Number(result[0].insertId);
+}
+
+export async function updateMenuItem(id: number, input: MenuItemInput) {
+  const db = await getDb();
+  if (!db) throw new Error("Banco de dados indisponível para atualizar o item.");
+  await db.update(menuItems).set(input).where(eq(menuItems.id, id));
+}
+
+export async function removeMenuItem(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Banco de dados indisponível para remover o item.");
+  await db.delete(menuItems).where(eq(menuItems.id, id));
 }
 
 export type EmailDeliveryInput = {

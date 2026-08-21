@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { readCookiePreference, saveCookiePreference, type PreferenceStorage } from "../client/src/cookiePreferences";
-import { adminViewFromPath, postLoginDestination, publicRoutes, publicViewFromPath } from "../client/src/navigation";
+import { adminViewFromPath, postLoginDestination, publicRoutes, publicViewFromPath, resolvePostLoginPath } from "../client/src/navigation";
 
 function createStorage(): PreferenceStorage {
   const values = new Map<string, string>();
@@ -29,6 +29,11 @@ describe("navegação e preferências persistentes", () => {
     expect(postLoginDestination("customer", "user")).toBe("/minha-conta");
     expect(postLoginDestination("admin", "user")).toBe("/minha-conta");
     expect(postLoginDestination("admin", "admin")).toBe("/admin/dashboard");
+  });
+
+  it("preserva o retorno ao checkout depois do login do cliente", () => {
+    expect(resolvePostLoginPath("/checkout", "customer", "user")).toBe("/checkout");
+    expect(resolvePostLoginPath(null, "customer", "user")).toBe("/minha-conta");
   });
 
   it("persiste e recupera a escolha de cookies após uma nova leitura", () => {

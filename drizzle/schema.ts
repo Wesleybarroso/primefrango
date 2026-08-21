@@ -25,6 +25,7 @@ export const users = mysqlTable("users", {
 export const integrationProvider = mysqlEnum("integration_provider", [
   "stripe",
   "mercado_pago",
+  "pagbank",
   "google_maps",
   "whatsapp",
   "email",
@@ -40,6 +41,39 @@ export const integrationSettings = mysqlTable("integration_settings", {
   webhookUrl: varchar("webhookUrl", { length: 2048 }),
   webhookCiphertext: text("webhookCiphertext"),
   isEnabled: boolean("isEnabled").notNull().default(false),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export const googleMetricsSettings = mysqlTable("google_metrics_settings", {
+  id: int("id").autoincrement().primaryKey(),
+  gaMeasurementId: varchar("gaMeasurementId", { length: 32 }),
+  gtmContainerId: varchar("gtmContainerId", { length: 32 }),
+  searchConsoleProperty: varchar("searchConsoleProperty", { length: 2048 }),
+  searchConsoleVerification: varchar("searchConsoleVerification", { length: 512 }),
+  isEnabled: boolean("isEnabled").notNull().default(false),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export const menuCategories = mysqlTable("menu_categories", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 64 }).notNull().unique(),
+  isActive: boolean("isActive").notNull().default(true),
+  sortOrder: int("sortOrder").notNull().default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export const menuItems = mysqlTable("menu_items", {
+  id: int("id").autoincrement().primaryKey(),
+  categoryId: int("categoryId").notNull(),
+  title: varchar("title", { length: 120 }).notNull(),
+  description: varchar("description", { length: 600 }),
+  priceCents: int("priceCents").notNull(),
+  imageUrl: varchar("imageUrl", { length: 2048 }),
+  isAvailable: boolean("isAvailable").notNull().default(true),
+  sortOrder: int("sortOrder").notNull().default(0),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -104,8 +138,11 @@ export const emailDeliverySettings = mysqlTable("email_delivery_settings", {
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
-export type IntegrationProvider = "stripe" | "mercado_pago" | "google_maps" | "whatsapp" | "email" | "assistant_ia";
+export type IntegrationProvider = "stripe" | "mercado_pago" | "pagbank" | "google_maps" | "whatsapp" | "email" | "assistant_ia";
 export type IntegrationSetting = typeof integrationSettings.$inferSelect;
+export type GoogleMetricsSetting = typeof googleMetricsSettings.$inferSelect;
+export type MenuCategory = typeof menuCategories.$inferSelect;
+export type MenuItem = typeof menuItems.$inferSelect;
 export type Promotion = typeof promotions.$inferSelect;
 export type Coupon = typeof coupons.$inferSelect;
 export type EmailDeliverySetting = typeof emailDeliverySettings.$inferSelect;
