@@ -225,6 +225,56 @@ const emptyPromotionForm: PromotionForm = { title: "", description: "", badge: "
 const toDateInput = (value: Date | null) => value ? new Date(value).toISOString().slice(0, 10) : "";
 const toCurrencyCents = (value: string) => Math.round(Number(value.replace(",", ".")) * 100);
 const formatPrice = (cents: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
+const acceptedImageExtensions = /\.(jpe?g|png|webp|heic|heif)$/i;
+const acceptedImageTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"]);
+
+function readImageAsDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error("Não foi possível ler a foto selecionada."));
+    reader.readAsDataURL(file);
+  });
+}
+
+function fileToImage(file: File) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const source = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => { URL.revokeObjectURL(source); resolve(image); };
+    image.onerror = () => { URL.revokeObjectURL(source); reject(new Error("Não foi possível abrir esta foto. Tente selecionar outra imagem.")); };
+    image.src = source;
+  });
+}
+
+async function normalizePromotionImage(file: File): Promise<string> {
+  if (!acceptedImageTypes.has(file.type) && !acceptedImageExtensions.test(file.name)) throw new Error("Use fotos JPEG, PNG, WebP ou HEIC/HEIF.");
+  if (file.size > 20 * 1024 * 1024) throw new Error("Cada foto deve ter no máximo 20 MB antes da otimização.");
+  const isHeic = ["image/heic", "image/heif"].includes(file.type) || /\.(heic|heif)$/i.test(file.name);
+  let sourceFile = file;
+  if (isHeic) {
+    try {
+      const { default: heic2any } = await import("heic2any");
+      const converted = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.84 });
+      const jpegBlob = Array.isArray(converted) ? converted[0] : converted;
+      sourceFile = new File([jpegBlob], `${file.name.replace(/\.[^.]+$/, "")}.jpg`, { type: "image/jpeg" });
+    } catch {
+      throw new Error("Não foi possível converter esta foto HEIC. No iPhone, abra a foto no app Fotos e compartilhe como JPEG antes de selecioná-la.");
+    }
+  }
+  const needsConversion = isHeic || sourceFile.size > 4.8 * 1024 * 1024;
+  if (!needsConversion) return readImageAsDataUrl(sourceFile);
+  const image = await fileToImage(sourceFile).catch(() => { throw new Error("Não foi possível otimizar esta foto para o envio. Escolha outra imagem ou exporte-a como JPEG."); });
+  const maxSide = 1920;
+  const scale = Math.min(1, maxSide / Math.max(image.naturalWidth, image.naturalHeight));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+  canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+  canvas.getContext("2d")?.drawImage(image, 0, 0, canvas.width, canvas.height);
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.84));
+  if (!blob || blob.size > 4.8 * 1024 * 1024) throw new Error("Não foi possível otimizar esta foto para o envio. Escolha uma imagem menor.");
+  return readImageAsDataUrl(new File([blob], `${sourceFile.name.replace(/\.[^.]+$/, "")}.jpg`, { type: "image/jpeg" }));
+}
 
 function Promocoes({ onNotice }: { onNotice: (message: string) => void }) {
   const utils = trpc.useUtils();
@@ -239,7 +289,7 @@ function Promocoes({ onNotice }: { onNotice: (message: string) => void }) {
   const statusMutation = trpc.promotions.setStatus.useMutation({ onSuccess: async () => { await refresh(); onNotice("Status da promoção atualizado."); }, onError: notifyError });
   const removeMutation = trpc.promotions.remove.useMutation({ onSuccess: async () => { await refresh(); onNotice("Promoção removida."); }, onError: notifyError });
   const uploadMutation = trpc.promotions.uploadImages.useMutation({ onSuccess: ({ images }) => { setImageUrls((current) => [...current, ...images.map((image) => image.url)].slice(0, 3)); onNotice("Imagem do combo enviada com sucesso."); }, onError: notifyError });
-  const handleImageSelection = (event: React.ChangeEvent<HTMLInputElement>) => { const files = Array.from(event.target.files ?? []); event.target.value = ""; if (!files.length) return; if (files.length + imageUrls.length > 3) { onNotice("Cada combo aceita no máximo três imagens."); return; } if (files.some((file) => !["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024)) { onNotice("Use imagens JPEG, PNG ou WebP com até 5 MB cada."); return; } Promise.all(files.map((file) => new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result)); reader.onerror = () => reject(new Error("Não foi possível ler a imagem.")); reader.readAsDataURL(file); }))).then((images) => uploadMutation.mutate({ images: images.map((dataUrl) => ({ dataUrl })) })).catch(notifyError); };
+  const handleImageSelection = async (event: React.ChangeEvent<HTMLInputElement>) => { const files = Array.from(event.target.files ?? []); event.target.value = ""; if (!files.length) return; if (files.length + imageUrls.length > 3) { onNotice("Cada combo aceita no máximo três imagens."); return; } try { const images = await Promise.all(files.map(normalizePromotionImage)); uploadMutation.mutate({ images: images.map((dataUrl) => ({ dataUrl })) }); } catch (error) { notifyError(error); } };
   const save = (event: React.FormEvent<HTMLFormElement>) => { event.preventDefault(); const originalPriceCents = toCurrencyCents(form.originalPrice); const salePriceCents = form.salePrice ? toCurrencyCents(form.salePrice) : null; if (!Number.isFinite(originalPriceCents) || originalPriceCents < 1) { onNotice("Informe o preço original do combo."); return; } if (salePriceCents && salePriceCents >= originalPriceCents) { onNotice("O preço promocional deve ser menor que o preço original."); return; } const data = { title: form.title, description: form.description, badge: form.badge, originalPriceCents, salePriceCents, imageUrls, status: form.status, startsAt: form.startsAt ? new Date(`${form.startsAt}T00:00:00`) : null, endsAt: form.endsAt ? new Date(`${form.endsAt}T23:59:59`) : null }; if (editingId) updateMutation.mutate({ id: editingId, data }); else saveMutation.mutate(data); };
   const edit = (promotion: NonNullable<typeof promotionsQuery.data>[number]) => { setEditingId(promotion.id); setImageUrls([promotion.image1Url, promotion.image2Url, promotion.image3Url].filter((url): url is string => Boolean(url))); setForm({ title: promotion.title, description: promotion.description, badge: promotion.badge || "", originalPrice: promotion.originalPriceCents ? String(promotion.originalPriceCents / 100) : "", salePrice: promotion.salePriceCents ? String(promotion.salePriceCents / 100) : "", startsAt: toDateInput(promotion.startsAt), endsAt: toDateInput(promotion.endsAt), status: promotion.status }); };
   const cancelEdit = () => { setEditingId(null); setForm(emptyPromotionForm); setImageUrls([]); };
@@ -250,7 +300,7 @@ function Promocoes({ onNotice }: { onNotice: (message: string) => void }) {
       <div className="promotion-form-heading"><div><p className="eyebrow">{editingId ? "EDITANDO COMBO" : "NOVO COMBO"}</p><h2>{editingId ? "Ajuste os detalhes da oferta" : "Monte sua oferta especial"}</h2><p>As imagens e os preços são exibidos ao cliente apenas quando a promoção estiver ativa.</p></div>{editingId && <button className="outline-button" type="button" onClick={cancelEdit}>Cancelar edição</button>}</div>
       <label>Título da promoção<input required maxLength={120} value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="Ex.: Combo domingo em família" /></label>
       <label>O que vem no combo?<textarea required maxLength={600} value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} placeholder="Ex.: 1 frango assado, farofa, arroz e refrigerante de 2 litros." /></label>
-      <div className="promotion-media-block"><div><b>Fotos do combo</b><small>Envie até 3 fotos reais em JPEG, PNG ou WebP, com até 5 MB cada.</small></div><div className="promotion-gallery">{imageUrls.map((url, index) => <figure key={url}><img src={url} alt={`Prévia ${index + 1} do combo`} /><button type="button" aria-label={`Remover imagem ${index + 1}`} onClick={() => setImageUrls((current) => current.filter((_, currentIndex) => currentIndex !== index))}><Trash2 size={14} /></button></figure>)}{imageUrls.length < 3 && <label className="image-picker"><ImagePlus size={20} /><span>{uploadMutation.isPending ? "Enviando…" : "Adicionar fotos"}</span><small>{imageUrls.length}/3</small><input type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={uploadMutation.isPending} onChange={handleImageSelection} /></label>}</div></div>
+      <div className="promotion-media-block"><div><b>Fotos do combo</b><small>Envie até 3 fotos reais. JPEG, PNG, WebP e HEIC/HEIF são aceitos; fotos grandes são otimizadas antes do envio.</small></div><div className="promotion-gallery">{imageUrls.map((url, index) => <figure key={url}><img src={url} alt={`Prévia ${index + 1} do combo`} /><button type="button" aria-label={`Remover imagem ${index + 1}`} onClick={() => setImageUrls((current) => current.filter((_, currentIndex) => currentIndex !== index))}><Trash2 size={14} /></button></figure>)}{imageUrls.length < 3 && <label className="image-picker"><ImagePlus size={20} /><span>{uploadMutation.isPending ? "Otimizando e enviando…" : "Adicionar fotos"}</span><small>{imageUrls.length}/3</small><input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" multiple disabled={uploadMutation.isPending} onChange={handleImageSelection} /></label>}</div></div>
       <div className="promotion-price-row"><label>Preço original<input required min="0.01" step="0.01" inputMode="decimal" type="number" value={form.originalPrice} onChange={(event) => setForm({ ...form, originalPrice: event.target.value })} placeholder="0,00" /><small>Valor antes do desconto.</small></label><label className="sale-price-field"><span><BadgePercent size={14} /> Preço promocional</span><input min="0.01" step="0.01" inputMode="decimal" type="number" value={form.salePrice} onChange={(event) => setForm({ ...form, salePrice: event.target.value })} placeholder="Opcional" /><small>Deve ser menor que o preço original.</small></label></div>
       <div className="promotion-form-row"><label>Selo curto (opcional)<input maxLength={48} value={form.badge} onChange={(event) => setForm({ ...form, badge: event.target.value })} placeholder="Ex.: SÓ HOJE" /></label><label>Status<select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value as PromotionForm["status"] })}><option value="draft">Rascunho</option><option value="active">Ativa agora</option><option value="archived">Arquivada</option></select></label><label>Início (opcional)<input type="date" value={form.startsAt} onChange={(event) => setForm({ ...form, startsAt: event.target.value })} /></label><label>Fim (opcional)<input type="date" value={form.endsAt} onChange={(event) => setForm({ ...form, endsAt: event.target.value })} /></label></div>
       <div className="promotion-submit-row"><span>{form.salePrice && form.originalPrice ? <>Cliente economiza {formatPrice(Math.max(0, toCurrencyCents(form.originalPrice) - toCurrencyCents(form.salePrice)))}</> : "Defina um preço promocional para destacar a economia."}</span><button className="approve promotion-primary-action" disabled={pending} type="submit">{pending ? "Salvando…" : editingId ? "Salvar mudanças" : "Criar promoção"}<ArrowRight size={15} /></button></div>

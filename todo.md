@@ -22,3 +22,9 @@
 - [ ] Validar o cadastro completo de combo em desktop e mobile e publicar a melhoria.
 - [x] Exibir as três imagens disponíveis em galeria na landing page e no cardápio público.
 - [ ] Validar visualmente a galeria de combos com uma, duas e três imagens em desktop e mobile.
+- [x] Diagnosticar a falha publicada ao enviar fotos de combos promocionais: fotos HEIC de iPhone não eram aceitas pelo seletor atual.
+- [x] Corrigir o upload seguro de imagens e exibir mensagens de erro acionáveis.
+- [ ] Validar o envio de uma, duas e três fotos no painel publicado.
+- [ ] Reproduzir a falha com uma foto real do fluxo publicado e registrar a mensagem retornada.
+- [x] Converter fotos HEIC/HEIF incompatíveis para JPEG antes do envio, com orientação clara ao administrador.
+- [x] Cobrir em teste formatos não suportados e o caminho de sucesso após a conversão no cliente.

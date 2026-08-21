@@ -29,4 +29,10 @@ describe("validação comercial de promoções", () => {
   it("rejeita mais de três imagens para o mesmo combo", async () => {
     await expect(caller.promotions.create({ ...basePromotion, imageUrls: ["/manus-storage/1.png", "/manus-storage/2.png", "/manus-storage/3.png", "/manus-storage/4.png"] })).rejects.toBeDefined();
   });
+
+  it("rejeita formato de imagem que não foi convertido pelo cliente", async () => {
+    await expect(caller.promotions.uploadImages({
+      images: [{ dataUrl: "data:image/heic;base64,AAAAAAAAAAAAAAAAAAAAAAAA" }],
+    })).rejects.toThrow("Envie somente imagens PNG, JPEG ou WebP.");
+  });
 });
