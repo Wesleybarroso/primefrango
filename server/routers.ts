@@ -3,7 +3,8 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { encryptCredential, maskCredential } from "./credentials";
 import { getSessionCookieOptions } from "./_core/cookies";
-import { createPromotion, listIntegrationSettings, listPromotions, listPublicPromotions, removePromotion, saveIntegrationSetting, setPromotionStatus, updatePromotion } from "./db";
+import { createCoupon, createPromotion, listCoupons, listEmailDeliverySettings, listIntegrationSettings, listPromotions, listPublicPromotions, removeCoupon, removePromotion, saveEmailDeliverySetting, saveIntegrationSetting, setCouponStatus, setPromotionStatus, updateCoupon, updatePromotion } from "./db";
+import { sendEmailConnectionTest } from "./emailDelivery";
 import { storagePut } from "./storage";
 import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, publicProcedure, router } from "./_core/trpc";
@@ -30,6 +31,37 @@ const promotionInputSchema = z.object({
 
 const promotionImageSchema = z.object({ dataUrl: z.string().min(32).max(7_000_000) });
 const promotionImageDataUrl = /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/;
+const couponStatusSchema = z.enum(["draft", "active", "archived"]);
+const couponInputSchema = z.object({
+  code: z.string().trim().toUpperCase().regex(/^[A-Z0-9_-]{3,32}$/, "Use de 3 a 32 letras, números, hífen ou sublinhado."),
+  description: z.string().trim().max(180).optional().or(z.literal("")),
+  discountType: z.enum(["percentage", "fixed"]),
+  discountValue: z.number().int().positive(),
+  minimumOrderCents: z.number().int().min(0),
+  maxUses: z.number().int().positive().nullable().optional(),
+  startsAt: z.coerce.date().nullable().optional(),
+  endsAt: z.coerce.date().nullable().optional(),
+  status: couponStatusSchema,
+}).refine((value) => value.discountType !== "percentage" || value.discountValue <= 100, {
+  message: "O desconto percentual deve estar entre 1% e 100%.", path: ["discountValue"],
+}).refine((value) => !value.startsAt || !value.endsAt || value.endsAt >= value.startsAt, {
+  message: "O fim da vigência deve ser posterior ao início.", path: ["endsAt"],
+});
+const emailDeliverySchema = z.object({
+  provider: z.enum(["resend", "smtp"]),
+  senderName: z.string().trim().min(2).max(120),
+  senderEmail: z.string().trim().email().max(320),
+  replyToEmail: z.string().trim().email().max(320).optional().or(z.literal("")),
+  secret: z.string().trim().min(4).max(4096),
+  smtpHost: z.string().trim().max(320).optional().or(z.literal("")),
+  smtpPort: z.number().int().min(1).max(65535).optional().nullable(),
+  smtpUsername: z.string().trim().max(320).optional().or(z.literal("")),
+  notifications: z.object({ login: z.boolean(), passwordReset: z.boolean(), passwordChanged: z.boolean(), orderUpdates: z.boolean(), errors: z.boolean(), discounts: z.boolean() }),
+}).superRefine((value, context) => {
+  if (value.provider === "smtp" && !value.smtpHost) context.addIssue({ code: z.ZodIssueCode.custom, path: ["smtpHost"], message: "Informe o servidor SMTP." });
+  if (value.provider === "smtp" && !value.smtpPort) context.addIssue({ code: z.ZodIssueCode.custom, path: ["smtpPort"], message: "Informe a porta SMTP." });
+  if (value.provider === "smtp" && !value.smtpUsername) context.addIssue({ code: z.ZodIssueCode.custom, path: ["smtpUsername"], message: "Informe o usuário SMTP." });
+});
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -63,6 +95,14 @@ export const appRouter = router({
       });
       return { provider: input.provider, configured: true, maskedSecret: maskCredential(input.secret) };
     }),
+  }),
+  emailDelivery: router({
+    list: adminProcedure.query(async () => listEmailDeliverySettings()),
+    save: adminProcedure.input(emailDeliverySchema).mutation(async ({ input }) => {
+      await saveEmailDeliverySetting({ provider: input.provider, senderName: input.senderName, senderEmail: input.senderEmail, replyToEmail: input.replyToEmail || null, secretCiphertext: encryptCredential(input.secret), maskedSecret: maskCredential(input.secret), smtpHost: input.provider === "smtp" ? input.smtpHost || null : null, smtpPort: input.provider === "smtp" ? input.smtpPort || null : null, smtpUsernameCiphertext: input.provider === "smtp" ? encryptCredential(input.smtpUsername || "") : null, smtpUsernameMasked: input.provider === "smtp" ? maskCredential(input.smtpUsername || "") : null, notificationsJson: JSON.stringify(input.notifications) });
+      return { provider: input.provider, configured: true } as const;
+    }),
+    sendTest: adminProcedure.input(z.object({ provider: z.enum(["resend", "smtp"]), recipient: z.string().trim().email().max(320) })).mutation(async ({ input }) => sendEmailConnectionTest(input)),
   }),
   payments: router({
     availableProviders: publicProcedure.query(async () => {
@@ -103,6 +143,13 @@ export const appRouter = router({
       await removePromotion(input.id);
       return { success: true } as const;
     }),
+  }),
+  coupons: router({
+    list: adminProcedure.query(async () => listCoupons()),
+    create: adminProcedure.input(couponInputSchema).mutation(async ({ input }) => ({ id: await createCoupon({ ...input, description: input.description || null }) })),
+    update: adminProcedure.input(z.object({ id: z.number().int().positive(), data: couponInputSchema })).mutation(async ({ input }) => { await updateCoupon(input.id, { ...input.data, description: input.data.description || null }); return { success: true } as const; }),
+    setStatus: adminProcedure.input(z.object({ id: z.number().int().positive(), status: couponStatusSchema })).mutation(async ({ input }) => { await setCouponStatus(input.id, input.status); return { success: true } as const; }),
+    remove: adminProcedure.input(z.object({ id: z.number().int().positive() })).mutation(async ({ input }) => { await removeCoupon(input.id); return { success: true } as const; }),
   }),
 
   // TODO: add feature routers here, e.g.

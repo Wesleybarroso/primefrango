@@ -63,10 +63,51 @@ export const promotions = mysqlTable("promotions", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
+export const couponStatus = mysqlEnum("coupon_status", ["draft", "active", "archived"]);
+export const couponDiscountType = mysqlEnum("coupon_discount_type", ["percentage", "fixed"]);
+
+export const coupons = mysqlTable("coupons", {
+  id: int("id").autoincrement().primaryKey(),
+  code: varchar("code", { length: 32 }).notNull().unique(),
+  description: varchar("description", { length: 180 }),
+  discountType: couponDiscountType.notNull(),
+  discountValue: int("discountValue").notNull(),
+  minimumOrderCents: int("minimumOrderCents").notNull().default(0),
+  maxUses: int("maxUses"),
+  usedCount: int("usedCount").notNull().default(0),
+  startsAt: timestamp("startsAt"),
+  endsAt: timestamp("endsAt"),
+  status: couponStatus.notNull().default("draft"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export const emailProvider = mysqlEnum("email_provider", ["resend", "smtp"]);
+
+export const emailDeliverySettings = mysqlTable("email_delivery_settings", {
+  id: int("id").autoincrement().primaryKey(),
+  provider: emailProvider.notNull().unique(),
+  senderName: varchar("senderName", { length: 120 }).notNull(),
+  senderEmail: varchar("senderEmail", { length: 320 }).notNull(),
+  replyToEmail: varchar("replyToEmail", { length: 320 }),
+  secretCiphertext: text("secretCiphertext").notNull(),
+  maskedSecret: varchar("maskedSecret", { length: 32 }).notNull(),
+  smtpHost: varchar("smtpHost", { length: 320 }),
+  smtpPort: int("smtpPort"),
+  smtpUsernameCiphertext: text("smtpUsernameCiphertext"),
+  smtpUsernameMasked: varchar("smtpUsernameMasked", { length: 64 }),
+  notificationsJson: text("notificationsJson").notNull(),
+  isEnabled: boolean("isEnabled").notNull().default(false),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 export type IntegrationProvider = "stripe" | "mercado_pago" | "google_maps" | "whatsapp" | "email" | "assistant_ia";
 export type IntegrationSetting = typeof integrationSettings.$inferSelect;
 export type Promotion = typeof promotions.$inferSelect;
+export type Coupon = typeof coupons.$inferSelect;
+export type EmailDeliverySetting = typeof emailDeliverySettings.$inferSelect;
 
 // TODO: Add your tables here

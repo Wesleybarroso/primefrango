@@ -28,3 +28,13 @@
 - [ ] Reproduzir a falha com uma foto real do fluxo publicado e registrar a mensagem retornada.
 - [x] Converter fotos HEIC/HEIF incompatíveis para JPEG antes do envio, com orientação clara ao administrador.
 - [x] Cobrir em teste formatos não suportados e o caminho de sucesso após a conversão no cliente.
+- [x] Exibir a promoção ativa real como campanha na tela de Marketing.
+- [x] Criar estrutura persistente para cupons com código, desconto, vigência e status.
+- [x] Implementar criação, edição, ativação e remoção de cupons no painel administrativo.
+- [x] Apresentar métricas e estados vazios coerentes nas telas de Marketing e Cupons.
+- [ ] Validar os módulos de Marketing e Cupons em desktop e mobile e publicar a correção.
+- [x] Adicionar Resend e SMTP profissional ao catálogo seguro de integrações de e-mail.
+- [x] Armazenar de forma cifrada as credenciais do provedor e guardar os dados públicos de remetente necessários ao envio.
+- [x] Permitir configurar preferências de e-mails transacionais; o aviso de novo login já é acionado, enquanto os demais dependem dos futuros fluxos locais correspondentes.
+- [x] Melhorar a tela de Integrações para apresentar estado, campos e orientações específicos para Resend e SMTP.
+- [ ] Validar a configuração de e-mail em desktop e mobile e publicar a evolução.

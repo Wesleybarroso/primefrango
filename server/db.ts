@@ -1,6 +1,6 @@
 import { desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, IntegrationProvider, Promotion, integrationSettings, promotions, users } from "../drizzle/schema";
+import { InsertUser, IntegrationProvider, Promotion, coupons, emailDeliverySettings, integrationSettings, promotions, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { isPublicPromotion } from "./promotions";
 
@@ -118,6 +118,39 @@ export async function saveIntegrationSetting(input: {
   });
 }
 
+export type EmailDeliveryInput = {
+  provider: "resend" | "smtp";
+  senderName: string;
+  senderEmail: string;
+  replyToEmail?: string | null;
+  secretCiphertext: string;
+  maskedSecret: string;
+  smtpHost?: string | null;
+  smtpPort?: number | null;
+  smtpUsernameCiphertext?: string | null;
+  smtpUsernameMasked?: string | null;
+  notificationsJson: string;
+};
+
+export async function listEmailDeliverySettings() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select({ provider: emailDeliverySettings.provider, senderName: emailDeliverySettings.senderName, senderEmail: emailDeliverySettings.senderEmail, replyToEmail: emailDeliverySettings.replyToEmail, maskedSecret: emailDeliverySettings.maskedSecret, smtpHost: emailDeliverySettings.smtpHost, smtpPort: emailDeliverySettings.smtpPort, smtpUsernameMasked: emailDeliverySettings.smtpUsernameMasked, notificationsJson: emailDeliverySettings.notificationsJson, isEnabled: emailDeliverySettings.isEnabled, updatedAt: emailDeliverySettings.updatedAt }).from(emailDeliverySettings);
+}
+
+export async function saveEmailDeliverySetting(input: EmailDeliveryInput) {
+  const db = await getDb();
+  if (!db) throw new Error("Banco de dados indisponível para salvar a integração de e-mail.");
+  await db.insert(emailDeliverySettings).values({ ...input, isEnabled: true }).onDuplicateKeyUpdate({ set: { ...input, isEnabled: true } });
+}
+
+export async function getPrivateEmailDeliverySetting(provider: "resend" | "smtp") {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(emailDeliverySettings).where(eq(emailDeliverySettings.provider, provider)).limit(1);
+  return result[0];
+}
+
 export type PromotionInput = {
   title: string;
   description: string;
@@ -166,6 +199,49 @@ export async function removePromotion(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Banco de dados indisponível para remover a promoção.");
   await db.delete(promotions).where(eq(promotions.id, id));
+}
+
+export type CouponInput = {
+  code: string;
+  description?: string | null;
+  discountType: "percentage" | "fixed";
+  discountValue: number;
+  minimumOrderCents: number;
+  maxUses?: number | null;
+  startsAt?: Date | null;
+  endsAt?: Date | null;
+  status: "draft" | "active" | "archived";
+};
+
+export async function listCoupons() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(coupons).orderBy(desc(coupons.updatedAt));
+}
+
+export async function createCoupon(input: CouponInput) {
+  const db = await getDb();
+  if (!db) throw new Error("Banco de dados indisponível para salvar o cupom.");
+  const result = await db.insert(coupons).values({ ...input, code: input.code.toUpperCase() });
+  return Number(result[0].insertId);
+}
+
+export async function updateCoupon(id: number, input: CouponInput) {
+  const db = await getDb();
+  if (!db) throw new Error("Banco de dados indisponível para atualizar o cupom.");
+  await db.update(coupons).set({ ...input, code: input.code.toUpperCase() }).where(eq(coupons.id, id));
+}
+
+export async function setCouponStatus(id: number, status: CouponInput["status"]) {
+  const db = await getDb();
+  if (!db) throw new Error("Banco de dados indisponível para atualizar o cupom.");
+  await db.update(coupons).set({ status }).where(eq(coupons.id, id));
+}
+
+export async function removeCoupon(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Banco de dados indisponível para remover o cupom.");
+  await db.delete(coupons).where(eq(coupons.id, id));
 }
 
 // TODO: add feature queries here as your schema grows.

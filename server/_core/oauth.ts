@@ -2,6 +2,7 @@ import { COOKIE_NAME, ONE_YEAR_MS, OAUTH_STATE_COOKIE, decodeOAuthState } from "
 import { parse as parseCookieHeader } from "cookie";
 import type { Express, Request, Response } from "express";
 import * as db from "../db";
+import { sendConfiguredTransactionalEmail } from "../emailDelivery";
 import { getSessionCookieOptions } from "./cookies";
 import { sdk } from "./sdk";
 
@@ -55,6 +56,15 @@ export function registerOAuthRoutes(app: Express) {
 
       const cookieOptions = getSessionCookieOptions(req);
       res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+
+      if (userInfo.email) {
+        void sendConfiguredTransactionalEmail({
+          event: "login",
+          recipient: userInfo.email,
+          subject: "Novo login na sua conta — Prime Frango Assado",
+          html: `<p>Olá${userInfo.name ? `, ${userInfo.name}` : ""}.</p><p>Identificamos um novo login na sua conta da Prime Frango Assado.</p><p>Se não foi você, entre em contato com o estabelecimento.</p>`,
+        }).catch((error) => console.error("[Email] Login notice failed", error));
+      }
 
       res.redirect(302, "/");
     } catch (error) {
