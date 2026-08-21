@@ -39,8 +39,9 @@
 - [x] Melhorar a tela de Integrações para apresentar estado, campos e orientações específicos para Resend e SMTP.
 - [ ] Validar a configuração de e-mail em desktop e mobile e publicar a evolução.
 - [ ] Adicionar PagBank ao catálogo de pagamentos configuráveis com credencial cifrada e status no checkout.
-- [ ] Adicionar configuração de Google Analytics 4, Google Tag Manager e Google Search Console na área de Integrações.
-- [ ] Exibir um painel empresarial de métricas com estado seguro para dados ainda não conectados.
+- [x] Adicionar configuração de Google Analytics 4, Google Tag Manager e Google Search Console na área de Integrações.
+- [x] Exibir um painel empresarial de métricas com estado seguro para dados ainda não conectados.
+- [x] Exibir estados de carregamento, erro e nova tentativa na configuração administrativa de métricas Google.
 - [ ] Validar as novas integrações em desktop e mobile e publicar a evolução.
 - [x] Auditar e corrigir a estrutura atual da seção pública de Cardápio.
 - [x] Criar categorias e itens de cardápio persistentes, com preço, disponibilidade e imagem opcional.
@@ -59,9 +60,11 @@
 - [x] Cobrir o retorno ao checkout após autenticação mantendo os itens do carrinho selecionados.
 - [x] Testar a reidratação do carrinho persistido no retorno do login ao checkout.
 - [ ] Verificar sem expor segredos as configurações salvas de Stripe, Grok e WhatsApp.
-- [ ] Validar o link Stripe fornecido e associá-lo de forma segura ao botão de continuidade do checkout.
+- [x] Validar o link Stripe fornecido e associá-lo de forma segura ao botão de continuidade do checkout.
 - [ ] Exibir ao administrador o status verificável das integrações e as orientações de configuração restantes.
-- [ ] Testar o redirecionamento de pagamento Stripe sem criar cobrança ou pagamento real.
+- [x] Testar o redirecionamento de pagamento Stripe sem criar cobrança ou pagamento real.
+- [ ] Adicionar teste de integração do contrato público que fornece o link Stripe hospedado sem criar pagamento.
+- [ ] Validar que o botão de checkout usa o link Stripe hospedado configurado quando Stripe está habilitado.
 - [x] Confirmar que o link Evolution Go informado é painel de gerenciamento e não webhook de eventos.
 - [x] Identificar a URL pública HTTPS correta da instância para comunicação de WhatsApp.
 - [x] Orientar o preenchimento seguro do webhook e do token da Evolution Go no painel administrativo.
