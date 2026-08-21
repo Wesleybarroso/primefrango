@@ -3,7 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { encryptCredential, maskCredential } from "./credentials";
 import { getSessionCookieOptions } from "./_core/cookies";
-import { createCoupon, createMenuCategory, createMenuItem, createPromotion, getGoogleMetricsSettings, getMenuCategoryById, listCoupons, listEmailDeliverySettings, listIntegrationSettings, listMenuCategories, listMenuItems, listPromotions, listPublicMenuCatalog, listPublicPromotions, removeCoupon, removeMenuCategory, removeMenuItem, removePromotion, saveEmailDeliverySetting, saveGoogleMetricsSettings, saveIntegrationSetting, setCouponStatus, setPromotionStatus, updateCoupon, updateMenuCategory, updateMenuItem, updatePromotion } from "./db";
+import { createCoupon, createMenuCategory, createMenuItem, createPromotion, getGoogleMetricsSettings, getMenuCategoryById, getPublicStripePaymentLink, listCoupons, listEmailDeliverySettings, listIntegrationSettings, listMenuCategories, listMenuItems, listPromotions, listPublicMenuCatalog, listPublicPromotions, removeCoupon, removeMenuCategory, removeMenuItem, removePromotion, saveEmailDeliverySetting, saveGoogleMetricsSettings, saveIntegrationSetting, setCouponStatus, setPromotionStatus, updateCoupon, updateMenuCategory, updateMenuItem, updatePromotion } from "./db";
 import { sendEmailConnectionTest } from "./emailDelivery";
 import { storagePut } from "./storage";
 import { systemRouter } from "./_core/systemRouter";
@@ -86,6 +86,7 @@ export const appRouter = router({
       provider: integrationProviderSchema,
       label: z.string().min(2).max(80),
       secret: z.string().min(8).max(4096),
+      paymentLink: z.string().url().max(2048).optional().or(z.literal("")),
       webhookUrl: z.string().url().max(2048).optional().or(z.literal("")),
       webhookSecret: z.string().max(4096).optional(),
     })).mutation(async ({ input }) => {
@@ -94,6 +95,7 @@ export const appRouter = router({
         label: input.label,
         maskedSecret: maskCredential(input.secret),
         secretCiphertext: encryptCredential(input.secret),
+        paymentLink: input.paymentLink || undefined,
         webhookUrl: input.webhookUrl || undefined,
         webhookCiphertext: input.webhookSecret ? encryptCredential(input.webhookSecret) : undefined,
       });
@@ -115,6 +117,7 @@ export const appRouter = router({
         .filter((item) => item.isEnabled && (item.provider === "stripe" || item.provider === "mercado_pago" || item.provider === "pagbank"))
         .map((item) => ({ provider: item.provider, label: item.label }));
     }),
+    hostedStripeLink: publicProcedure.query(async () => ({ url: await getPublicStripePaymentLink() })),
   }),
   googleMetrics: router({
     publicConfig: publicProcedure.query(async () => { const setting = await getGoogleMetricsSettings(); return setting ? { gaMeasurementId: setting.gaMeasurementId, gtmContainerId: setting.gtmContainerId, searchConsoleVerification: setting.searchConsoleVerification, isEnabled: setting.isEnabled } : null; }),

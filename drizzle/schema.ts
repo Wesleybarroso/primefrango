@@ -38,6 +38,7 @@ export const integrationSettings = mysqlTable("integration_settings", {
   label: varchar("label", { length: 80 }).notNull(),
   maskedSecret: varchar("maskedSecret", { length: 32 }).notNull(),
   secretCiphertext: text("secretCiphertext").notNull(),
+  paymentLink: varchar("paymentLink", { length: 2048 }),
   webhookUrl: varchar("webhookUrl", { length: 2048 }),
   webhookCiphertext: text("webhookCiphertext"),
   isEnabled: boolean("isEnabled").notNull().default(false),

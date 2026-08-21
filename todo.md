@@ -58,3 +58,18 @@
 - [x] Exibir erro e ação de nova tentativa quando os provedores de pagamento não puderem ser carregados no Checkout.
 - [x] Cobrir o retorno ao checkout após autenticação mantendo os itens do carrinho selecionados.
 - [x] Testar a reidratação do carrinho persistido no retorno do login ao checkout.
+- [ ] Verificar sem expor segredos as configurações salvas de Stripe, Grok e WhatsApp.
+- [ ] Validar o link Stripe fornecido e associá-lo de forma segura ao botão de continuidade do checkout.
+- [ ] Exibir ao administrador o status verificável das integrações e as orientações de configuração restantes.
+- [ ] Testar o redirecionamento de pagamento Stripe sem criar cobrança ou pagamento real.
+- [x] Confirmar que o link Evolution Go informado é painel de gerenciamento e não webhook de eventos.
+- [x] Identificar a URL pública HTTPS correta da instância para comunicação de WhatsApp.
+- [x] Orientar o preenchimento seguro do webhook e do token da Evolution Go no painel administrativo.
+- [ ] Confirmar que o endpoint interno de automação não pode ser usado diretamente pelo site publicado.
+- [ ] Identificar a URL HTTPS pública correspondente ao webhook da automação.
+- [x] Testar a disponibilidade pública da Evolution Go sem enviar mensagens ou modificar a instância.
+- [x] Identificar a rota pública correta da API Evolution Go, pois a rota de consulta padrão respondeu 404.
+- [x] Validar a chave Evolution Go fornecida em uma rota pública de leitura, sem enviar mensagens.
+- [x] Substituir a credencial WhatsApp armazenada pela chave global Evolution Go validada, de modo cifrado.
+- [x] Distinguir no painel a URL base da API Evolution Go da URL de webhook de entrada.
+- [x] Criar receptor protegido para eventos Evolution Go sem registrar conteúdo de mensagens.

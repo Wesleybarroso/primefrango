@@ -93,7 +93,26 @@ export async function getUserByOpenId(openId: string) {
 export async function listIntegrationSettings() {
   const db = await getDb();
   if (!db) return [];
-  return db.select({ provider: integrationSettings.provider, label: integrationSettings.label, maskedSecret: integrationSettings.maskedSecret, isEnabled: integrationSettings.isEnabled, updatedAt: integrationSettings.updatedAt }).from(integrationSettings);
+  return db.select({ provider: integrationSettings.provider, label: integrationSettings.label, maskedSecret: integrationSettings.maskedSecret, paymentLink: integrationSettings.paymentLink, isEnabled: integrationSettings.isEnabled, updatedAt: integrationSettings.updatedAt }).from(integrationSettings);
+}
+
+export async function getPrivateIntegrationSetting(provider: IntegrationProvider) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db
+    .select({ secretCiphertext: integrationSettings.secretCiphertext, isEnabled: integrationSettings.isEnabled, webhookUrl: integrationSettings.webhookUrl })
+    .from(integrationSettings)
+    .where(eq(integrationSettings.provider, provider))
+    .limit(1);
+  return result[0];
+}
+
+export async function getPublicStripePaymentLink() {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select({ paymentLink: integrationSettings.paymentLink, isEnabled: integrationSettings.isEnabled }).from(integrationSettings).where(eq(integrationSettings.provider, "stripe")).limit(1);
+  const setting = result[0];
+  return setting?.isEnabled && setting.paymentLink ? setting.paymentLink : null;
 }
 
 export async function saveIntegrationSetting(input: {
@@ -101,6 +120,7 @@ export async function saveIntegrationSetting(input: {
   label: string;
   maskedSecret: string;
   secretCiphertext: string;
+  paymentLink?: string;
   webhookUrl?: string;
   webhookCiphertext?: string;
 }) {
@@ -111,6 +131,7 @@ export async function saveIntegrationSetting(input: {
       label: input.label,
       maskedSecret: input.maskedSecret,
       secretCiphertext: input.secretCiphertext,
+      paymentLink: input.paymentLink ?? null,
       webhookUrl: input.webhookUrl ?? null,
       webhookCiphertext: input.webhookCiphertext ?? null,
       isEnabled: true,

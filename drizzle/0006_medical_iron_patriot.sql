@@ -1,0 +1,1 @@
+ALTER TABLE `integration_settings` ADD `paymentLink` varchar(2048);
