@@ -63,7 +63,7 @@
 - [x] Validar o link Stripe fornecido e associá-lo de forma segura ao botão de continuidade do checkout.
 - [x] Exibir ao administrador o status verificável das integrações e as orientações de configuração restantes.
 - [x] Testar o redirecionamento de pagamento Stripe sem criar cobrança ou pagamento real.
-- [ ] Adicionar teste de integração do contrato público que fornece o link Stripe hospedado sem criar pagamento.
+- [x] Adicionar teste de integração do contrato público que fornece o link Stripe hospedado sem criar pagamento.
 - [x] Validar que o botão de checkout usa o link Stripe hospedado configurado quando Stripe está habilitado.
 - [x] Confirmar que o link Evolution Go informado é painel de gerenciamento e não webhook de eventos.
 - [x] Identificar a URL pública HTTPS correta da instância para comunicação de WhatsApp.
