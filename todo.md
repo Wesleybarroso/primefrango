@@ -59,9 +59,9 @@
 - [x] Exibir erro e ação de nova tentativa quando os provedores de pagamento não puderem ser carregados no Checkout.
 - [x] Cobrir o retorno ao checkout após autenticação mantendo os itens do carrinho selecionados.
 - [x] Testar a reidratação do carrinho persistido no retorno do login ao checkout.
-- [ ] Verificar sem expor segredos as configurações salvas de Stripe, Grok e WhatsApp.
+- [x] Verificar sem expor segredos as configurações salvas de Stripe, Grok e WhatsApp.
 - [x] Validar o link Stripe fornecido e associá-lo de forma segura ao botão de continuidade do checkout.
-- [ ] Exibir ao administrador o status verificável das integrações e as orientações de configuração restantes.
+- [x] Exibir ao administrador o status verificável das integrações e as orientações de configuração restantes.
 - [x] Testar o redirecionamento de pagamento Stripe sem criar cobrança ou pagamento real.
 - [ ] Adicionar teste de integração do contrato público que fornece o link Stripe hospedado sem criar pagamento.
 - [ ] Validar que o botão de checkout usa o link Stripe hospedado configurado quando Stripe está habilitado.
