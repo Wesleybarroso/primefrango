@@ -38,7 +38,7 @@
 - [x] Permitir configurar preferências de e-mails transacionais; o aviso de novo login já é acionado, enquanto os demais dependem dos futuros fluxos locais correspondentes.
 - [x] Melhorar a tela de Integrações para apresentar estado, campos e orientações específicos para Resend e SMTP.
 - [ ] Validar a configuração de e-mail em desktop e mobile e publicar a evolução.
-- [ ] Adicionar PagBank ao catálogo de pagamentos configuráveis com credencial cifrada e status no checkout.
+- [x] Adicionar PagBank ao catálogo de pagamentos configuráveis com credencial cifrada e status no checkout.
 - [x] Adicionar configuração de Google Analytics 4, Google Tag Manager e Google Search Console na área de Integrações.
 - [x] Exibir um painel empresarial de métricas com estado seguro para dados ainda não conectados.
 - [x] Exibir estados de carregamento, erro e nova tentativa na configuração administrativa de métricas Google.
