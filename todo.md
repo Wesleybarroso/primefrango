@@ -68,7 +68,7 @@
 - [x] Confirmar que o link Evolution Go informado é painel de gerenciamento e não webhook de eventos.
 - [x] Identificar a URL pública HTTPS correta da instância para comunicação de WhatsApp.
 - [x] Orientar o preenchimento seguro do webhook e do token da Evolution Go no painel administrativo.
-- [ ] Confirmar que o endpoint interno de automação não pode ser usado diretamente pelo site publicado.
+- [x] Confirmar que o endpoint interno de automação não pode ser usado diretamente pelo site publicado.
 - [ ] Identificar a URL HTTPS pública correspondente ao webhook da automação.
 - [x] Testar a disponibilidade pública da Evolution Go sem enviar mensagens ou modificar a instância.
 - [x] Identificar a rota pública correta da API Evolution Go, pois a rota de consulta padrão respondeu 404.
