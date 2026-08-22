@@ -82,3 +82,4 @@
 - [x] Remover definitivamente as credenciais WhatsApp/Evolution Go fornecidas e desativar a integração correspondente.
 - [x] Criar o repositório privado primefrango no GitHub e enviar o código-fonte atual do projeto.
 - [x] Escrever um README profissional com instalação, comandos, arquitetura, integrações, segurança e publicação.
+- [x] Ocultar visualmente a barra de rolagem do menu lateral móvel, mantendo a rolagem por toque disponível.
