@@ -79,3 +79,6 @@
 - [x] Adicionar um botão de saída seguro e acessível à lateral do painel administrativo, inclusive em celular.
 - [x] Garantir que cada item da lateral administrativa abra um módulo com estado funcional, ação disponível ou orientação explícita.
 - [ ] Validar o redirecionamento autenticado do checkout para o link Stripe hospedado sem concluir pagamento.
+- [x] Remover definitivamente as credenciais WhatsApp/Evolution Go fornecidas e desativar a integração correspondente.
+- [ ] Criar o repositório privado primefrango no GitHub e enviar o código-fonte atual do projeto.
+- [x] Escrever um README profissional com instalação, comandos, arquitetura, integrações, segurança e publicação.
