@@ -64,7 +64,7 @@
 - [x] Exibir ao administrador o status verificável das integrações e as orientações de configuração restantes.
 - [x] Testar o redirecionamento de pagamento Stripe sem criar cobrança ou pagamento real.
 - [ ] Adicionar teste de integração do contrato público que fornece o link Stripe hospedado sem criar pagamento.
-- [ ] Validar que o botão de checkout usa o link Stripe hospedado configurado quando Stripe está habilitado.
+- [x] Validar que o botão de checkout usa o link Stripe hospedado configurado quando Stripe está habilitado.
 - [x] Confirmar que o link Evolution Go informado é painel de gerenciamento e não webhook de eventos.
 - [x] Identificar a URL pública HTTPS correta da instância para comunicação de WhatsApp.
 - [x] Orientar o preenchimento seguro do webhook e do token da Evolution Go no painel administrativo.
@@ -78,7 +78,7 @@
 - [x] Criar receptor protegido para eventos Evolution Go sem registrar conteúdo de mensagens.
 - [x] Adicionar um botão de saída seguro e acessível à lateral do painel administrativo, inclusive em celular.
 - [x] Garantir que cada item da lateral administrativa abra um módulo com estado funcional, ação disponível ou orientação explícita.
-- [ ] Validar o redirecionamento autenticado do checkout para o link Stripe hospedado sem concluir pagamento.
+- [x] Validar o redirecionamento autenticado do checkout para o link Stripe hospedado sem concluir pagamento.
 - [x] Remover definitivamente as credenciais WhatsApp/Evolution Go fornecidas e desativar a integração correspondente.
 - [x] Criar o repositório privado primefrango no GitHub e enviar o código-fonte atual do projeto.
 - [x] Escrever um README profissional com instalação, comandos, arquitetura, integrações, segurança e publicação.
