@@ -19,3 +19,7 @@ O checkout autenticado mostrou o Stripe como provedor pronto. Após selecionar S
 O painel autenticado mostrou uma promoção ativa, com título, descrição, preço original, preço promocional, período e ações de edição, encerramento e remoção. O módulo de Marketing confirmou uma campanha ativa e exibiu a mesma oferta como destaque e na prévia da landing page. Nenhuma promoção ou cupom foi criado, editado ou removido durante esta revisão.
 
 O módulo de Cupons exibiu um cupom ativo, com desconto percentual, condição mínima, contador de usos e ações de edição, encerramento e remoção. O formulário também apresentou os campos de código, descrição, tipo e valor de desconto, pedido mínimo, limite, status e vigência.
+
+## Verificação móvel pública
+
+Em viewport móvel, o cardápio exibiu o combo ativo, preço promocional, ação de adição e o resumo de carrinho sem sobreposição. O checkout exibiu as etapas de pedido, cobertura e pagamento em uma coluna, com Stripe disponível e os provedores ainda não configurados claramente identificados.
