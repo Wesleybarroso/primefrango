@@ -121,7 +121,7 @@ export const appRouter = router({
   }),
   googleMetrics: router({
     publicConfig: publicProcedure.query(async () => { const setting = await getGoogleMetricsSettings(); return setting ? { gaMeasurementId: setting.gaMeasurementId, gtmContainerId: setting.gtmContainerId, searchConsoleVerification: setting.searchConsoleVerification, isEnabled: setting.isEnabled } : null; }),
-    adminConfig: adminProcedure.query(async () => getGoogleMetricsSettings()),
+    adminConfig: adminProcedure.query(async () => (await getGoogleMetricsSettings()) ?? null),
     save: adminProcedure.input(googleMetricsSchema).mutation(async ({ input }) => ({ id: await saveGoogleMetricsSettings({ gaMeasurementId: input.gaMeasurementId || null, gtmContainerId: input.gtmContainerId || null, searchConsoleProperty: input.searchConsoleProperty || null, searchConsoleVerification: input.searchConsoleVerification || null }) })),
   }),
   menu: router({
