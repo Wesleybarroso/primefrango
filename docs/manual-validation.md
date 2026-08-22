@@ -13,3 +13,9 @@ Com a mesma sessão autenticada, o cardápio público exibiu o **Combo de hoje**
 ## Checkout Stripe hospedado
 
 O checkout autenticado mostrou o Stripe como provedor pronto. Após selecionar Stripe e acionar a continuidade, a aplicação abriu o link Stripe hospedado configurado para o **Combo Frango por R$ 40,00**. Nenhum campo de pagamento foi alterado e nenhuma cobrança foi enviada durante a validação.
+
+## Promoções e marketing
+
+O painel autenticado mostrou uma promoção ativa, com título, descrição, preço original, preço promocional, período e ações de edição, encerramento e remoção. O módulo de Marketing confirmou uma campanha ativa e exibiu a mesma oferta como destaque e na prévia da landing page. Nenhuma promoção ou cupom foi criado, editado ou removido durante esta revisão.
+
+O módulo de Cupons exibiu um cupom ativo, com desconto percentual, condição mínima, contador de usos e ações de edição, encerramento e remoção. O formulário também apresentou os campos de código, descrição, tipo e valor de desconto, pedido mínimo, limite, status e vigência.
