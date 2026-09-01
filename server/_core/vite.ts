@@ -83,10 +83,11 @@ export function serveStatic(app: Express) {
   app.use("*", async (req, res) => {
     const template = await fs.promises.readFile(path.resolve(distPath, "index.html"), "utf-8");
     try {
-      const serverEntry = path.resolve(import.meta.dirname, "..", "server-ssr", "entry-server.js");
+      const serverEntry = path.resolve(import.meta.dirname, "server-ssr", "entry-server.js");
       const { render } = await import(serverEntry);
       const { html, head } = render(req.originalUrl);
-      const status = head.noindex && !req.path.startsWith("/admin") && !["/acesso", "/checkout", "/acompanhar-pedido"].includes(req.path) ? 404 : 200;
+      const requestedPath = req.originalUrl.split("?")[0].replace(/\/+$/, "") || "/";
+      const status = head.noindex && !requestedPath.startsWith("/admin") && !["/acesso", "/checkout", "/acompanhar-pedido"].includes(requestedPath) ? 404 : 200;
       res.status(status).set({ "Content-Type": "text/html", "Cache-Control": "no-cache" }).end(composeHtml(template, html, head));
     } catch (error) {
       console.error("[SSR] render failed, serving shell:", error);

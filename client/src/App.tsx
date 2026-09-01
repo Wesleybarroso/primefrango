@@ -38,8 +38,8 @@ import { trpc } from "./lib/trpc";
 import { adminViewFromPath, publicRoutes, publicViewFromPath, resolvePostLoginPath, type AccessIntent, type AdminView, type PublicView } from "./navigation";
 import { addCartLine, changeCartQuantity, hydrateCart, type CartLine } from "./cart";
 import { hostedCheckoutDestination } from "./checkoutPayment";
-
-const logo = "/manus-storage/prime-frango-logo-3d_7921a8ac.png";
+import { BrandMark } from "@/components/BrandMark";
+import { RealDeliveryMap } from "@/components/RealDeliveryMap";
 const ACCESS_INTENT_KEY = "prime-frango-access-intent";
 const POST_LOGIN_PATH_KEY = "prime-frango-post-login-path";
 const CART_STORAGE_KEY = "prime-frango-cart";
@@ -152,7 +152,7 @@ function PublicShell({ view, navigate }: { view: PublicView; navigate: (path: st
   return (
     <div className="public-site">
       <header className="public-header">
-        <button className="brand-button" onClick={() => go("inicio")} aria-label="Ir para a página inicial" type="button"><img src={logo} alt="Prime Frango Assado" /></button>
+        <button className="brand-button" onClick={() => go("inicio")} aria-label="Ir para a página inicial" type="button"><BrandMark className="brand-mark header-logo" /></button>
         <button className="mobile-menu-toggle" type="button" onClick={() => setMenuOpen((open) => !open)} aria-expanded={menuOpen} aria-label="Abrir menu principal">{menuOpen ? <X size={20} /> : <Menu size={20} />}</button>
         <nav className={menuOpen ? "public-nav is-open" : "public-nav"} aria-label="Navegação principal">
           <button className={view === "inicio" ? "current" : ""} onClick={() => go("inicio")} type="button">Início</button>
@@ -170,7 +170,7 @@ function PublicShell({ view, navigate }: { view: PublicView; navigate: (path: st
       {view === "acesso" && <AccessPage go={go} />}
       {view === "conta" && <AccountPage go={go} />}
       {view === "checkout" && <CheckoutPage go={go} cart={cart} setCart={setCart} />}
-      <footer className="landing-footer"><img src={logo} alt="Prime Frango Assado" /><button onClick={() => go("cardapio")} type="button">Cardápio</button><button onClick={() => go("quem-somos")} type="button">Quem Somos</button><button onClick={() => go("acompanhar")} type="button">Acompanhar pedido</button><button onClick={() => go("acesso")} type="button">Minha conta</button></footer>
+      <footer className="landing-footer"><BrandMark className="brand-mark footer-logo" /><button onClick={() => go("cardapio")} type="button">Cardápio</button><button onClick={() => go("quem-somos")} type="button">Quem Somos</button><button onClick={() => go("acompanhar")} type="button">Acompanhar pedido</button><button onClick={() => go("acesso")} type="button">Minha conta</button></footer>
     </div>
   );
 }
@@ -179,11 +179,11 @@ function LandingPage({ go }: { go: (view: PublicView) => void }) {
   return <main>
     <section className="landing-hero">
       <div><p className="eyebrow">PRIME FRANGO ASSADO · BELÉM</p><h1>Frango assado, pedido simples e entrega acompanhada.</h1><p>Escolha no cardápio, valide a área de entrega e acompanhe cada etapa do pedido com uma experiência feita para a Prime Frango Assado.</p><div className="hero-actions"><button className="hero-primary" onClick={() => go("cardapio")} type="button">Pedir agora <ArrowRight size={15} /></button><button className="hero-secondary" onClick={() => go("quem-somos")} type="button">Conheça a marca</button></div><div className="hero-badges"><span>Cardápio atualizado</span><span>Entrega por área</span><span>Pedido acompanhado</span></div></div>
-      <div className="hero-product" aria-label="Identidade visual tridimensional da Prime Frango Assado"><img src={logo} alt="Logo 3D da Prime Frango Assado" /><i /><span>3D</span></div>
+      <div className="hero-product" aria-label="Identidade visual tridimensional da Prime Frango Assado"><BrandMark className="brand-mark hero-logo" /><i /><span>3D</span></div>
     </section>
     <section className="landing-sections"><article><MapPinned size={19} /><div><h2>Área de entrega</h2><p>O checkout valida o endereço contra o raio configurado pela operação antes do pagamento.</p></div></article><article><ClipboardList size={19} /><div><h2>Pedido acompanhado</h2><p>Cliente autenticado pode consultar o código, os estágios e a entrega quando houver integração ativa.</p></div></article><article><MessageCircle size={19} /><div><h2>Suporte antes do WhatsApp</h2><p>O chat orienta sobre cardápio, cobertura e status antes de encaminhar o atendimento humano.</p></div></article></section>
     <section className="landing-menu-preview"><div><p className="eyebrow">CARDÁPIO E PROMOÇÕES</p><h2>Monte o pedido do seu jeito.</h2><p>Frango assado, bebidas, acompanhamentos, promoções do dia e cupons aparecem no cardápio conforme a configuração da operação.</p><button className="hero-primary" onClick={() => go("cardapio")} type="button">Abrir cardápio <ArrowRight size={15} /></button></div><PublicPromotions /></section>
-    <section className="landing-route"><div className="route-copy"><p className="eyebrow">DO PEDIDO À ENTREGA</p><h2>Você sabe onde o pedido está.</h2><p>Depois do pagamento, o pedido é analisado, preparado, despachado e acompanhado na sua conta. O mapa é exibido quando a integração de entrega disponibilizar a localização.</p><button className="outline-button" onClick={() => go("acompanhar")} type="button">Acompanhar pedido</button></div><div className="landing-map-art" aria-label="Representação visual da área de entrega"><span className="route-origin" /><span className="route-destination" /><i /><b>Área de entrega configurada</b></div></section>
+    <section className="landing-route"><div className="route-copy"><p className="eyebrow">DO PEDIDO À ENTREGA</p><h2>Você sabe onde o pedido está.</h2><p>Depois do pagamento, o pedido é analisado, preparado, despachado e acompanhado na sua conta. Consulte a área de atendimento diretamente no mapa.</p><button className="outline-button" onClick={() => go("acompanhar")} type="button">Acompanhar pedido</button></div><RealDeliveryMap /></section>
     <section className="landing-review-note"><Star size={20} /><div><p className="eyebrow">AVALIAÇÕES REAIS</p><h2>O footer publica somente avaliações reais aprovadas pelo proprietário.</h2><p>Nenhum depoimento aparece até que exista uma avaliação de pedido concluído e moderada na área administrativa.</p></div></section>
   </main>;
 }
@@ -209,11 +209,11 @@ function MenuPage({ go, cart, setCart }: { go: (view: PublicView) => void; cart:
 }
 
 function AboutPage({ go }: { go: (view: PublicView) => void }) {
-  return <main className="about-page"><section className="about-hero"><div><p className="eyebrow">PRIME FRANGO ASSADO</p><h1>Da brasa ao seu pedido, com sabor e cuidado em cada etapa.</h1><p className="about-lead">Uma página institucional para apresentar a história, o preparo e a forma como a marca organiza o atendimento e as entregas.</p><button className="hero-primary" onClick={() => go("cardapio")} type="button">Conhecer o cardápio <ArrowRight size={15} /></button></div><div className="about-mark"><img src={logo} alt="Logo Prime Frango Assado" /><span>ASSADO COM IDENTIDADE</span></div></section><section className="about-pillars"><article><b>01</b><h2>Preparo</h2><p>O conteúdo institucional explica o cuidado da operação sem substituir informações reais do estabelecimento.</p></article><article><b>02</b><h2>Pedido</h2><p>O cliente encontra cardápio, promoções, cupom e uma jornada de compra objetiva.</p></article><article><b>03</b><h2>Entrega</h2><p>O acompanhamento mostra etapas do pedido e disponibilidade da entrega quando configurada.</p></article></section></main>;
+  return <main className="about-page"><section className="about-hero"><div><p className="eyebrow">PRIME FRANGO ASSADO</p><h1>Da brasa ao seu pedido, com sabor e cuidado em cada etapa.</h1><p className="about-lead">Uma página institucional para apresentar a história, o preparo e a forma como a marca organiza o atendimento e as entregas.</p><button className="hero-primary" onClick={() => go("cardapio")} type="button">Conhecer o cardápio <ArrowRight size={15} /></button></div><div className="about-mark"><BrandMark className="brand-mark about-logo" /><span>ASSADO COM IDENTIDADE</span></div></section><section className="about-pillars"><article><b>01</b><h2>Preparo</h2><p>O conteúdo institucional explica o cuidado da operação sem substituir informações reais do estabelecimento.</p></article><article><b>02</b><h2>Pedido</h2><p>O cliente encontra cardápio, promoções, cupom e uma jornada de compra objetiva.</p></article><article><b>03</b><h2>Entrega</h2><p>O acompanhamento mostra etapas do pedido e disponibilidade da entrega quando configurada.</p></article></section></main>;
 }
 
 function TrackingPage({ go }: { go: (view: PublicView) => void }) {
-  return <main className="content-page tracking-page"><div className="page-intro"><p className="eyebrow">ACOMPANHAMENTO</p><h1>Consulte seu pedido com segurança.</h1><p>Entre na conta para visualizar o código de pedido, o histórico e os estágios de preparo e entrega.</p></div><section className="tracking-empty"><ClipboardList size={32} /><h2>Nenhum pedido disponível nesta sessão</h2><p>Quando estiver autenticado e houver pedidos, esta área apresentará o código, o status e o mapa de acompanhamento quando a logística fornecer dados.</p><button onClick={() => go("acesso")} type="button">Entrar na minha conta</button></section></main>;
+  return <main className="content-page tracking-page"><div className="page-intro"><p className="eyebrow">ACOMPANHAMENTO</p><h1>Consulte seu pedido com segurança.</h1><p>Entre na conta para visualizar o código de pedido, o histórico e os estágios de preparo e entrega.</p></div><section className="tracking-layout"><section className="tracking-empty"><ClipboardList size={32} /><h2>Nenhum pedido disponível nesta sessão</h2><p>Quando estiver autenticado e houver pedidos, esta área apresentará o código, o status e o mapa de acompanhamento quando a logística fornecer dados.</p><button onClick={() => go("acesso")} type="button">Entrar na minha conta</button></section><RealDeliveryMap compact /></section></main>;
 }
 
 function AccessPage({ go }: { go: (view: PublicView) => void }) {
@@ -261,7 +261,7 @@ function AdminShell({ view, navigate }: { view: AdminView; navigate: (path: stri
   };
   return <div className={collapsed ? "admin-shell is-collapsed" : "admin-shell"}>
     <aside className={menuOpen ? "sidebar mobile-open" : "sidebar"}>
-      <button className="brand-button" type="button" onClick={() => navigate("/")} aria-label="Abrir site público"><img className="brand-logo" src={logo} alt="Prime Frango Assado" /></button><p className="admin-label">ADMIN</p>
+      <button className="brand-button" type="button" onClick={() => navigate("/")} aria-label="Abrir site público"><BrandMark className="brand-mark brand-logo" /></button><p className="admin-label">ADMIN</p>
       <nav aria-label="Navegação administrativa">{adminItems.map(({ label, view: itemView, icon: Icon }) => <button className={itemView === view ? "nav-item active" : "nav-item"} key={itemView} onClick={() => nav(itemView)} type="button"><Icon size={15} strokeWidth={1.9} /><span>{label}</span></button>)}</nav>
       <div className="sidebar-footer"><button className="sidebar-logout" onClick={signOut} type="button"><LogOut size={16} /><span>Sair da conta</span></button><button className="collapse" onClick={() => setCollapsed((value) => !value)} aria-label={collapsed ? "Expandir menu" : "Recolher menu"} type="button"><ChevronDown size={17} /></button></div>
     </aside>
