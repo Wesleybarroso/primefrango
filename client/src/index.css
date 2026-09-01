@@ -304,3 +304,18 @@ button, a { -webkit-tap-highlight-color: transparent; }
   button, a { transition: transform .16s cubic-bezier(.23,1,.32,1), box-shadow .18s ease, background .18s ease, border-color .18s ease; }
   button:active { transform: scale(.98); }
 }
+
+
+@media (max-width: 700px) {
+  .cookie-banner { left: 14px; right: 14px; bottom: 14px; grid-template-columns: auto 1fr; gap: 8px 11px; padding: 15px 14px; border-radius: 16px; }
+  .cookie-banner>svg { width: 20px; height: 20px; }
+  .cookie-banner h2 { font-size: 16px; }
+  .cookie-banner p { max-width: none; font-size: 12px; line-height: 1.42; }
+  .cookie-actions { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .cookie-actions button { min-height: 46px; padding: 0 8px; font-size: 12px; line-height: 1.15; }
+}
+
+@media (max-width: 360px) {
+  .cookie-actions { grid-template-columns: 1fr; }
+  .cookie-actions button { min-height: 42px; }
+}
