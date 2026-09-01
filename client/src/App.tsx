@@ -48,12 +48,12 @@ function readCart() { if (typeof window === "undefined") return [] as CartLine[]
 
 function startRoleLogin(intent: AccessIntent) {
   if (typeof window !== "undefined") sessionStorage.setItem(ACCESS_INTENT_KEY, intent);
-  startLogin();
+  startLogin(intent);
 }
 
 function startCheckoutLogin() {
   if (typeof window !== "undefined") window.sessionStorage.setItem(POST_LOGIN_PATH_KEY, "/checkout");
-  startLogin();
+  startLogin("customer");
 }
 
 const adminItems: { label: string; view: AdminView; icon: typeof LayoutDashboard }[] = [
@@ -218,7 +218,18 @@ function TrackingPage({ go }: { go: (view: PublicView) => void }) {
 
 function AccessPage({ go }: { go: (view: PublicView) => void }) {
   const [mode, setMode] = useState<AccessIntent>("customer");
-  return <main className="access-page"><section className="access-card"><p className="eyebrow">ACESSO SEGURO</p><h1>{mode === "customer" ? "Entre na sua conta" : "Acesso do administrador"}</h1><p>{mode === "customer" ? "Entre para consultar seus pedidos, acompanhar a entrega, manter o carrinho e concluir a compra com segurança." : "Use a conta do proprietário para administrar pedidos, cardápio, promoções, integrações e operações."}</p><div className="access-tabs" role="tablist"><button className={mode === "customer" ? "active" : ""} onClick={() => setMode("customer")} type="button">Cliente</button><button className={mode === "admin" ? "active" : ""} onClick={() => setMode("admin")} type="button">Administrador</button></div><div className="access-actions"><button className="hero-primary" onClick={() => startRoleLogin(mode)} type="button">{mode === "customer" ? "Entrar ou criar conta" : "Entrar no painel administrativo"}<ArrowRight size={15} /></button><button className="hero-secondary" onClick={() => go(mode === "customer" ? "cardapio" : "inicio")} type="button">{mode === "customer" ? "Voltar ao cardápio" : "Voltar ao site"}</button></div><small>O acesso usa uma sessão segura. Na primeira entrada, o provedor cria o perfil de cliente. Caso precise recuperar o acesso, use a opção disponível na janela segura de autenticação. O painel só é liberado para a conta marcada como administradora.</small></section></main>;
+  const [authError, setAuthError] = useState("");
+  const previewAuthEnabled = import.meta.env.VITE_PRIME_FRANGO_PREVIEW_AUTH === "true";
+
+  useEffect(() => {
+    const handleAuthError = (event: Event) => {
+      setAuthError((event as CustomEvent<string>).detail || "Não foi possível iniciar o acesso.");
+    };
+    window.addEventListener("prime-auth-error", handleAuthError);
+    return () => window.removeEventListener("prime-auth-error", handleAuthError);
+  }, []);
+
+  return <main className="access-page"><section className="access-card"><div className="access-card-topline"><p className="eyebrow">ACESSO SEGURO</p>{previewAuthEnabled && <span className="preview-status"><i /> Preview ativo</span>}</div><h1>{mode === "customer" ? "Entre na sua conta" : "Acesso do administrador"}</h1><p>{mode === "customer" ? "Entre para consultar seus pedidos, acompanhar a entrega, manter o carrinho e concluir a compra com segurança." : "Use a conta do proprietário para administrar pedidos, cardápio, promoções, integrações e operações."}</p>{previewAuthEnabled && <div className="access-preview-note" role="status"><strong>Ambiente de teste</strong><span>O botão abaixo abre uma sessão de demonstração para você navegar pelo site.</span></div>}{authError && <div className="access-error" role="alert">{authError}</div>}<div className="access-tabs" role="tablist"><button className={mode === "customer" ? "active" : ""} onClick={() => { setMode("customer"); setAuthError(""); }} type="button">Cliente</button><button className={mode === "admin" ? "active" : ""} onClick={() => { setMode("admin"); setAuthError(""); }} type="button">Administrador</button></div><div className="access-actions"><button className="hero-primary" onClick={() => startRoleLogin(mode)} type="button">{mode === "customer" ? "Entrar ou criar conta" : "Entrar no painel administrativo"}<ArrowRight size={15} /></button><button className="hero-secondary" onClick={() => go(mode === "customer" ? "cardapio" : "inicio")} type="button">{mode === "customer" ? "Voltar ao cardápio" : "Voltar ao site"}</button></div><small>O acesso usa uma sessão segura. Na primeira entrada, o provedor cria o perfil de cliente. Caso precise recuperar o acesso, use a opção disponível na janela segura de autenticação. O painel só é liberado para a conta marcada como administradora.</small></section></main>;
 }
 
 function AccountPage({ go }: { go: (view: PublicView) => void }) {

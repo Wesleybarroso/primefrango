@@ -12,10 +12,25 @@ export { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 // call would desync it from an in-flight login and the callback would reject it
 // with "invalid oauth state". It returns void by design, so there is no URL to
 // stash across renders.
-export const startLogin = () => {
+export const startLogin = (role: "customer" | "admin" = "customer") => {
   const oauthPortalUrl = import.meta.env.VITE_OAUTH_PORTAL_URL;
   const appId = import.meta.env.VITE_APP_ID;
   const redirectUri = `${window.location.origin}/api/oauth/callback`;
+  const previewAuthEnabled = import.meta.env.VITE_PRIME_FRANGO_PREVIEW_AUTH === "true";
+
+  if (!oauthPortalUrl || !appId) {
+    if (previewAuthEnabled) {
+      const previewUrl = new URL("/api/preview-auth", window.location.origin);
+      previewUrl.searchParams.set("role", role);
+      window.location.assign(previewUrl.toString());
+      return;
+    }
+
+    window.dispatchEvent(new CustomEvent("prime-auth-error", {
+      detail: "O acesso ainda não foi configurado neste ambiente. Configure o OAuth para liberar o login.",
+    }));
+    return;
+  }
 
   const nonce = crypto.randomUUID();
   document.cookie = `${OAUTH_STATE_COOKIE}=${nonce}; Path=/; Max-Age=600; SameSite=None; Secure`;
@@ -27,5 +42,5 @@ export const startLogin = () => {
   url.searchParams.set("state", state);
   url.searchParams.set("type", "signIn");
 
-  window.location.href = url.toString();
+  window.location.assign(url.toString());
 };

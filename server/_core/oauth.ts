@@ -4,6 +4,7 @@ import type { Express, Request, Response } from "express";
 import * as db from "../db";
 import { sendConfiguredTransactionalEmail } from "../emailDelivery";
 import { getSessionCookieOptions } from "./cookies";
+import { ENV } from "./env";
 import { sdk } from "./sdk";
 
 function getQueryParam(req: Request, key: string): string | undefined {
@@ -12,6 +13,22 @@ function getQueryParam(req: Request, key: string): string | undefined {
 }
 
 export function registerOAuthRoutes(app: Express) {
+  app.get("/api/preview-auth", async (req: Request, res: Response) => {
+    if (process.env.PRIME_FRANGO_PREVIEW_AUTH !== "true" || !ENV.appId) {
+      res.status(404).json({ error: "Preview authentication is disabled" });
+      return;
+    }
+
+    const requestedRole = getQueryParam(req, "role");
+    const role = requestedRole === "admin" ? "admin" : "user";
+    const openId = `prime-frango-preview-${role}`;
+    const name = role === "admin" ? "Administrador Prime Frango" : "Cliente Prime Frango";
+    const sessionToken = await sdk.createSessionToken(openId, { name, expiresInMs: ONE_YEAR_MS });
+    const cookieOptions = getSessionCookieOptions(req);
+    res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+    res.redirect(role === "admin" ? "/admin/dashboard" : "/minha-conta");
+  });
+
   app.get("/api/oauth/callback", async (req: Request, res: Response) => {
     const code = getQueryParam(req, "code");
     const state = getQueryParam(req, "state");

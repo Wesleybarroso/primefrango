@@ -87,7 +87,8 @@ export function serveStatic(app: Express) {
       const { render } = await import(serverEntry);
       const { html, head } = render(req.originalUrl);
       const requestedPath = req.originalUrl.split("?")[0].replace(/\/+$/, "") || "/";
-      const status = head.noindex && !requestedPath.startsWith("/admin") && !["/acesso", "/checkout", "/acompanhar-pedido"].includes(requestedPath) ? 404 : 200;
+      const publicPrivatePaths = ["/acesso", "/checkout", "/acompanhar-pedido", "/minha-conta"];
+      const status = head.noindex && !requestedPath.startsWith("/admin") && !publicPrivatePaths.includes(requestedPath) ? 404 : 200;
       res.status(status).set({ "Content-Type": "text/html", "Cache-Control": "no-cache" }).end(composeHtml(template, html, head));
     } catch (error) {
       console.error("[SSR] render failed, serving shell:", error);

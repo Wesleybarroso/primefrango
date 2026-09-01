@@ -27,6 +27,7 @@ export type SessionPayload = {
 const EXCHANGE_TOKEN_PATH = `/webdev.v1.WebDevAuthPublicService/ExchangeToken`;
 const GET_USER_INFO_PATH = `/webdev.v1.WebDevAuthPublicService/GetUserInfo`;
 const GET_USER_INFO_WITH_JWT_PATH = `/webdev.v1.WebDevAuthPublicService/GetUserInfoWithJwt`;
+const PREVIEW_OPEN_ID_PREFIX = "prime-frango-preview-";
 
 class OAuthService {
   constructor(private client: ReturnType<typeof axios.create>) {
@@ -276,6 +277,10 @@ class SDKServer {
       throw ForbiddenError("Invalid session cookie");
     }
 
+    if (process.env.PRIME_FRANGO_PREVIEW_AUTH === "true" && session.openId.startsWith(PREVIEW_OPEN_ID_PREFIX)) {
+      return buildPreviewUser(session);
+    }
+
     if (session.openId.startsWith(CRON_OPEN_ID_PREFIX)) {
       const userInfo = await this.getUserInfoWithJwt(sessionToken ?? "");
       const taskUid = userInfo.taskUid ?? null;
@@ -327,6 +332,22 @@ export type AuthenticatedUser = User & {
   taskUid?: string;
   isCron?: boolean;
 };
+
+function buildPreviewUser(session: SessionPayload): AuthenticatedUser {
+  const isAdmin = session.openId.endsWith("-admin");
+  const now = new Date();
+  return {
+    id: isAdmin ? -2 : -3,
+    openId: session.openId,
+    name: session.name || (isAdmin ? "Administrador Prime Frango" : "Cliente Prime Frango"),
+    email: isAdmin ? "admin@primefrango.preview" : "cliente@primefrango.preview",
+    loginMethod: "preview",
+    role: isAdmin ? "admin" : "user",
+    createdAt: now,
+    updatedAt: now,
+    lastSignedIn: now,
+  } as AuthenticatedUser;
+}
 
 function buildCronUser(
   userInfo: GetUserInfoWithJwtResponse
